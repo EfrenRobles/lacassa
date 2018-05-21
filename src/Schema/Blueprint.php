@@ -3,7 +3,6 @@
 use Illuminate\Database\Connection;
 use \Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;
 
-
 class Blueprint extends \Illuminate\Database\Schema\Blueprint
 {
     /**
@@ -32,7 +31,8 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
     public function getAddedColumns()
     {
         return array_filter(
-            $this->columns, function ($column) {
+            $this->columns,
+            function ($column) {
                 return ! $column->change;
             }
         );
@@ -46,7 +46,7 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
      */
     public function toSql(Connection $connection, BaseGrammar $grammar)
     {
-        $this->addImpliedCommands();
+        $this->addImpliedCommands($grammar);
 
         $statements = [];
         // Each type of command has a corresponding compiler function on the schema
@@ -82,8 +82,8 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
     public function compilePrimary()
     {
         $primaryKey = $this->primary;
-        if($primaryKey) {
-            if('primary' == $primaryKey->name) {
+        if ($primaryKey) {
+            if ('primary' == $primaryKey->name) {
                 return sprintf('primary key (%s) ', implode(', ', $primaryKey->columns));
             }
         }
@@ -215,17 +215,6 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
     }
 
     /**
-     * Create a new timestamp column on the table.
-     *
-     * @param  string $column
-     * @return \Illuminate\Support\Fluent
-     */
-    public function timestamp($column)
-    {
-        return $this->addColumn('timestamp', $column);
-    }
-
-    /**
      * Create a new timeuuid column on the table.
      *
      * @param  string $column
@@ -282,5 +271,4 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
     {
         return $this->addColumn('varint', $column);
     }
-
 }
