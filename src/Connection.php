@@ -88,6 +88,7 @@ class Connection extends BaseConnection
             ->withContactPoints('node.cassandra.l4lb.thisdcos.directory')
             ->withPort(9042)->build();
         $keyspace  = $config['keyspace'];
+        dd($keyspace);
         $connection   = $cluster->connect($keyspace);
         return $connection;
     }
