@@ -31,7 +31,7 @@ Using comoser:
 
 Add the line below in the "Register Service Provider" of bootstrap/app.php file:
 
-	$app->register(Cubettech\Lacassa\CassandraServiceProvider::class);
+	$app->register(Adrianheras\Lacassa\CassandraServiceProvider::class);
 
 Include to .env file the filled data below:
 
