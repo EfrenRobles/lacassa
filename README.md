@@ -1,6 +1,6 @@
 ## **Eloquent Cassandra for Lumen 5.7.x**
 
-A library for Eloquent Apache Cassandra support.
+Eloquent library for Apache Cassandra support at Lumen 5.7.x
 
 Fork of cubittech/lacassa
 
