@@ -28,7 +28,7 @@ class CassandraServiceProvider extends ServiceProvider
 	$this->app->singleton('db', function ($app) {
             $config = [
             	'host' => env('DB_HOST', 'localhost'),
-            	'port' => env('DB_PORT', 9042),
+            	'port' => intval(env('DB_PORT', 9042)),
             	'keyspace' => env('DB_KEYSPACE', 'mykeyspace'),
             	'username' => env('DB_USERNAME', ''),
             	'password' => env('DB_PASSWORD', ''),
