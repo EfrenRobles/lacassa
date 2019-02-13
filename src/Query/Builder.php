@@ -1,4 +1,4 @@
-<?php namespace Cubettech\Lacassa\Query;
+<?php namespace Adrianheras\Lacassa\Query;
 
 use Closure;
 use DateTime;
@@ -7,7 +7,7 @@ use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Cubettech\Lacassa\Connection;
+use Adrianheras\Lacassa\Connection;
 use Cassandra;
 
 

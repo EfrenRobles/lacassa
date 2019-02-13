@@ -1,5 +1,5 @@
 {
-    "name": "cubettech/lacassa",
+    "name": "adrianheras/lacassa",
     "type": "library",
     "description": "Cassandra based query builder for laravel.",
     "license": "MIT",
@@ -23,11 +23,15 @@
         {
             "name": "Renny M Roy",
             "email": "renny.roy@cubettech.com"
+        },
+	{
+            "name": "Adrián Heras",
+            "email": "adrianhears@hotmail.com"
         }
     ],
     "autoload": {
         "psr-4": {
-            "Cubettech\\Lacassa\\":"src/"
+            "Adrianheras\\Lacassa\\":"src/"
             }
         },
     "minimum-stability": "dev",

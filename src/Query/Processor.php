@@ -1,4 +1,4 @@
-<?php namespace Cubettech\Lacassa\Query;
+<?php namespace Adrianheras\Lacassa\Query;
 
 use Illuminate\Database\Query\Processors\Processor as BaseProcessor;
 

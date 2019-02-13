@@ -1,9 +1,9 @@
-<?php namespace Cubettech\Lacassa\Schema;
+<?php namespace Adrianheras\Lacassa\Schema;
 
 use Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;
-use Cubettech\Lacassa\Schema\Blueprint as Blueprint;
+use Adrianheras\Lacassa\Schema\Blueprint as Blueprint;
 use \Illuminate\Support\Fluent;
-use Cubettech\Lacassa\Connection;
+use Adrianheras\Lacassa\Connection;
 use \Illuminate\Database\Schema\Blueprint as BaseBlueprint;
 
 class Grammar extends BaseGrammar

@@ -1,5 +1,5 @@
 <?php
-namespace Cubettech\Lacassa;
+namespace Adrianheras\Lacassa;
 
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Database\ConnectionResolverInterface as ConnectionResolverInterface;
