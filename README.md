@@ -1,4 +1,4 @@
-## **Eloquent Cassandra for Lumen 5.7.* **
+## **Eloquent Cassandra for Lumen 5.7.x**
 
 A library for Eloquent Apache Cassandra support.
 
@@ -20,8 +20,8 @@ Fork of cubittech/lacassa
 
 ## **Prerequisites**
 
-	* Datastax PHP Driver for Apache Cassandra installed. Instructions at https://github.com/datastax/php-driver
-	* PHP 7.*
+* Datastax PHP Driver for Apache Cassandra installed. Instructions at https://github.com/datastax/php-driver
+* PHP 7.*
 
 ## **Installation**
 
