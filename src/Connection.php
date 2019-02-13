@@ -2,9 +2,10 @@
 namespace Cubettech\Lacassa;
 
 use Illuminate\Database\Connection as BaseConnection;
+use Illuminate\Database\ConnectionResolverInterface as ConnectionResolverInterface;
 use Cassandra;
 
-class Connection extends BaseConnection
+class Connection extends BaseConnection implements ConnectionResolverInterface
 {
     /**
      * The Cassandra connection handler.
@@ -84,7 +85,10 @@ class Connection extends BaseConnection
      */
     protected function createConnection(array $config)
     {
-        $cluster   = Cassandra::cluster()->build();
+        $cluster   = Cassandra::cluster()
+		     	->withContactPoints($config['host'])
+            		->withPort($config['port'])
+			->build();
         $keyspace  = $config['keyspace'];
         $connection   = $cluster->connect($keyspace);
         return $connection;
@@ -203,4 +207,30 @@ class Connection extends BaseConnection
     {
         return call_user_func_array([$this->connection, $method], $parameters);
     }
+
+    // Interface methods implementation (for Lumen 5.7.* compatibility)
+
+    /**
+     * Get a database connection instance.
+     *
+     * @param  string  $name
+     * @return \Illuminate\Database\ConnectionInterface
+     */
+    public function connection($name = null){}
+
+    /**
+     * Get the default connection name.
+     *
+     * @return string
+     */
+    public function getDefaultConnection(){}
+
+    /**
+     * Set the default connection name.
+     *
+     * @param  string  $name
+     * @return void
+     */
+    public function setDefaultConnection($name){}
+
 }

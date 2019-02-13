@@ -25,11 +25,16 @@ class CassandraServiceProvider extends ServiceProvider
     public function register()
     {
         // Add database driver.
-        $this->app->resolving('db', function ($db) {
-            $db->extend('Cassandra', function ($config, $name) {
-                $config['name'] = $name;
-                return new Connection($config);
-            });
+	$this->app->singleton('db', function ($app) {
+            $config = [
+            	'host' => env('DB_HOST', 'localhost'),
+            	'port' => env('DB_PORT', 9042),
+            	'keyspace' => env('DB_KEYSPACE', 'mykeyspace'),
+            	'username' => env('DB_USERNAME', ''),
+            	'password' => env('DB_PASSWORD', ''),
+            ];
+            return new Connection($config);
         });
+
     }
 }

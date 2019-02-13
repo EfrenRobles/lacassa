@@ -1,15 +1,16 @@
-## **Lacassa**
+## **Eloquent Cassandra for Lumen 5.7.* **
 
+A library for Eloquent Apache Cassandra support.
 
-A Query builder with support for Cassandra, using the original Laravel API. This library extends the original Laravel classes, so it uses exactly the same methods.
+Fork of cubittech/lacassa
 
 ## **Table of contents**
 
+* Prerequisites
+
 * Installation
 
-* Configuration
-
-* Query 	Builder
+* Query Builder
 
 * Schema
 
@@ -17,38 +18,35 @@ A Query builder with support for Cassandra, using the original Laravel API. This
 
 * Examples
 
+## **Prerequisites**
+
+	* Datastax PHP Driver for Apache Cassandra installed. Instructions at https://github.com/datastax/php-driver
+	* PHP 7.*
+
 ## **Installation**
 
-Make sure you have the DataStax PHP Driver for Apache Cassandra installed. You can find installation instructions at https://github.com/datastax/php-driver
-or 
-https://github.com/datastax/php-driver/blob/master/ext/README.md
+Using comoser:
 
-*datastax php-driver requires php version 5.6+*
+    composer require adrianheras/lacassa
 
-Installation using composer:
+Add the line below in the "Register Service Provider" of bootstrap/app.php file:
 
-    composer require cubettech/lacassa
+	$app->register(Cubettech\Lacassa\CassandraServiceProvider::class);
 
-And add the service provider in config/app.php:
+Include to .env file the filled data below:
 
-    Cubettech\Lacassa\CassandraServiceProvider::class,
+	DB_CONNECTION=cassandra
+	DB_HOST=
+	DB_PORT=9042
+	DB_KEYSPACE=mykeyspace
+	DB_USERNAME=
+	DB_PASSWORD=
 
-## **Configuration**
 
-Change your default database connection name in config/database.php:
+## **Rest documentation (from the forked repository cubittech/lacassa - Lacassa)**
 
-    'default' => env('DB_CONNECTION', 'cassandra'),
+A Query builder with support for Cassandra, using the original Laravel API. This library extends the original Laravel classes, so it uses exactly the same methods.
 
-And add a new cassandra connection:
-
-    'cassandra' => [
-    	 	'driver' => 'Cassandra',
-    		'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', 7199),
-            'keyspace' => env('DB_DATABASE', 'cassandra_db'),
-        	'username' => env('DB_USERNAME', ''),
-        	'password' => env('DB_PASSWORD', ''),
-     ],
 
 ### **Auth**
 
