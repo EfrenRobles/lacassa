@@ -1,4 +1,4 @@
-<?php namespace Adrianheras\Lacassa\Query;
+<?php namespace Adrianheras\Lumencassandra\Query;
 
 use Illuminate\Database\Query\Grammars\Grammar as BaseGrammar;
 use Illuminate\Database\Query\Builder as BaseBuilder;
@@ -38,7 +38,7 @@ class Grammar extends BaseGrammar
     /**
       * Compile an insert statement into CQL.
       *
-      * @param  Adrianheras\Lacassa\Query $query
+      * @param  Adrianheras\Lumencassandra\Query $query
       * @param  array               $values
       * @return string
       */
@@ -107,7 +107,7 @@ class Grammar extends BaseGrammar
     /**
      * Compile a delete statement into CQL.
      *
-     * @param  Adrianheras\Lacassa\Query $query
+     * @param  Adrianheras\Lumencassandra\Query $query
      * @return string
      */
     public function compileDelete(BaseBuilder $query)

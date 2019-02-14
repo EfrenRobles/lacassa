@@ -25,11 +25,11 @@ Cassandra support for Lumen 5.7.x database query builder
 
 Using composer:
 
-    composer require adrianheras/lacassa
+    composer require adrianheras/lumencassandra
 
 Add the line below in the "Register Service Provider" of bootstrap/app.php file:
 
-	$app->register(Adrianheras\Lacassa\CassandraServiceProvider::class);
+	$app->register(Adrianheras\Lumencassandra\CassandraServiceProvider::class);
 
 Include to .env file the filled data below:
 
@@ -41,7 +41,7 @@ Include to .env file the filled data below:
 	DB_PASSWORD=
 
 
-## **Rest documentation (from the forked repository cubittech/lacassa - Lacassa)**
+## **Rest documentation (from the forked repository cubittech/lacassa - Lumencassandra)**
 
 A Query builder with support for Cassandra, using the original Laravel API. This library extends the original Laravel classes, so it uses exactly the same methods.
 

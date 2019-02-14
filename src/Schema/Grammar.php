@@ -1,9 +1,9 @@
-<?php namespace Adrianheras\Lacassa\Schema;
+<?php namespace Adrianheras\Lumencassandra\Schema;
 
 use Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;
-use Adrianheras\Lacassa\Schema\Blueprint as Blueprint;
+use Adrianheras\Lumencassandra\Schema\Blueprint as Blueprint;
 use \Illuminate\Support\Fluent;
-use Adrianheras\Lacassa\Connection;
+use Adrianheras\Lumencassandra\Connection;
 use \Illuminate\Database\Schema\Blueprint as BaseBlueprint;
 
 class Grammar extends BaseGrammar

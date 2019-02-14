@@ -1,6 +1,6 @@
 <?php
 
-namespace Adrianheras\Lacassa;
+namespace Adrianheras\Lumencassandra;
 
 use Illuminate\Support\ServiceProvider;
 use Cassandra;

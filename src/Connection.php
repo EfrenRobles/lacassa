@@ -1,5 +1,5 @@
 <?php
-namespace Adrianheras\Lacassa;
+namespace Adrianheras\Lumencassandra;
 
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Database\ConnectionResolverInterface as ConnectionResolverInterface;

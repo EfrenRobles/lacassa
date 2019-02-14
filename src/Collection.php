@@ -1,4 +1,4 @@
-<?php namespace Adrianheras\Lacassa;
+<?php namespace Adrianheras\Lumencassandra;
 
 use Exception;
 use MongoDB\BSON\ObjectID;

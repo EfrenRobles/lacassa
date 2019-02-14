@@ -1,16 +1,15 @@
 {
-    "name": "adrianheras/lacassa",
+    "name": "adrianheras/lumencassandra",
     "type": "library",
     "description": "Cassandra support for Lumen 5.7.x database query builder",
     "license": "MIT",
     "keywords": [
         "cassandra",
         "nosql",
-        "laravel",
+        "lumen",
         "database",
         "query builder",
         "cql",
-        "lacassa"
     ],
     "require": {
         "datastax/php-driver": "^1.2"
@@ -31,7 +30,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Adrianheras\\Lacassa\\":"src/"
+            "Adrianheras\\Lumencassandra\\":"src/"
             }
         },
     "minimum-stability": "dev",
