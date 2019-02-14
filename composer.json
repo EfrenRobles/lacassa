@@ -9,7 +9,7 @@
         "lumen",
         "database",
         "query builder",
-        "cql",
+        "cql"
     ],
     "require": {
         "datastax/php-driver": "^1.2"
