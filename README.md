@@ -1,4 +1,4 @@
-## **Eloquent Cassandra for Lumen 5.7.x**
+## **Lumen Cassandra**
 
 Cassandra support for Lumen 5.7.x database query builder
 
