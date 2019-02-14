@@ -1,7 +1,7 @@
 {
     "name": "adrianheras/lacassa",
     "type": "library",
-    "description": "library for Eloquent Apache Cassandra support.",
+    "description": "Cassandra support for Lumen 5.7.x database query builder",
     "license": "MIT",
     "keywords": [
         "cassandra",
