@@ -1,4 +1,4 @@
-## **Lumen Cassandra Query Builder**
+## **Eloquent Cassandra for Lumen 5.7.x**
 
 Cassandra support for Lumen 5.7.x database query builder
 
@@ -40,12 +40,6 @@ Include to .env file the filled data below:
 	DB_USERNAME=
 	DB_PASSWORD=
 
-
-## **Rest documentation (from the forked repository cubittech/lacassa - Lumencassandra)**
-
-A Query builder with support for Cassandra, using the original Laravel API. This library extends the original Laravel classes, so it uses exactly the same methods.
-
-
 ### **Auth**
 
 You can use Laravel's native Auth functionality for cassandra, make sure your config/auth.php looks like 
@@ -63,24 +57,8 @@ You can use Laravel's native Auth functionality for cassandra, make sure your co
 
 ## **Schema**
 
-The database driver also has (limited) schema builder support. You can easily manipulate tables and set indexes:
+Preparing the schema in Adrianheras\Lumencassandra\PrepareSchema
 
-        Schema::create(
-            'users', function ($table) {
-                $table->int('id');
-	            $table->text('name');
-	            $table->text('email');
-	            $table->text('password');
-                $table->text('remember_token');
-	            $table->setCollection('phn', 'bigint');
-                $table->listCollection('hobbies', 'text');
-                $table->mapCollection('friends', 'text', 'text');
-                $table->primary(['id']);
-          });
-
-DROP table
-
-        Schema::drop('users');
 
 # **CQL data types supported**
 
