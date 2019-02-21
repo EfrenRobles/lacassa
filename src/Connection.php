@@ -5,6 +5,7 @@ namespace Adrianheras\Lumencassandra;
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Database\ConnectionResolverInterface as ConnectionResolverInterface;
 use Cassandra;
+use Adrianheras\Lumencassandra\Helper\Helper;
 
 class Connection extends BaseConnection implements ConnectionResolverInterface
 {
@@ -93,9 +94,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
             ->build();
         $keyspace = $config['keyspace'];
 
-
         $connection = $cluster->connect($keyspace);
-
 
         return $connection;
     }
@@ -167,7 +166,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
                 if (!is_array($value)) {
                     $each_result .= "{$key}: '$value',";
                 } else {
-                    $each_result .= $this->elem2UDT($value);
+                    $each_result .= $this->elem2UDT($value) . ",";
                 }
             }
 
@@ -178,7 +177,6 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
             $result .= $each_result;
             $result .= '}';
         }
-
         return $result;
     }
 
@@ -202,6 +200,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
             $query = preg_replace('/\?/', $value, $query, 1);
         }
         $builder = new Query\Builder($this, $this->getPostProcessor());
+
         return $builder->executeCql($query);
     }
 
@@ -218,13 +217,19 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         // by the statement and return that back to the developer. We'll first need
         // to execute the statement and then we'll use PDO to fetch the affected.
         foreach ($bindings as $binding) {
-            $value = $value = 'string' == strtolower(gettype($binding)) ? "'" . $binding . "'" : $binding;
+            //$value = $value = 'string' ==
+           // strtolower(gettype($binding)) ? "'" . $binding . "'" : $binding;
+            $value = (!strtolower(gettype($binding)) || Helper::isUuid($binding)) ?
+                $binding : "'".$binding."'";
             $query = preg_replace('/\?/', $value, $query, 1);
         }
+
+
         $builder = new Query\Builder($this, $this->getPostProcessor());
 
         return $builder->executeCql($query);
     }
+
 
     /**
      * Execute an CQL statement and return the boolean result.

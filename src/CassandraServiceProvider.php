@@ -12,10 +12,7 @@ class CassandraServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
-    {
-        //require __DIR__ . '/../vendor/autoload.php';
-    }
+    public function boot(){}
 
     /**
      * Register the application services.
@@ -25,7 +22,7 @@ class CassandraServiceProvider extends ServiceProvider
     public function register()
     {
         // Add database driver.
-	$this->app->singleton('db', function ($app) {
+	    $this->app->singleton('db', function ($app) {
             $config = [
             	'host' => env('DB_HOST', 'localhost'),
             	'port' => intval(env('DB_PORT', 9042)),
@@ -33,6 +30,11 @@ class CassandraServiceProvider extends ServiceProvider
             	'username' => env('DB_USERNAME', ''),
             	'password' => env('DB_PASSWORD', ''),
             ];
+
+            if (env('DB_CLI_HOST',false) && $this->app->runningInConsole()) {
+                $config['host'] = env('DB_CLI_HOST', 'localhost');
+            }
+
             return new Connection($config);
         });
 
