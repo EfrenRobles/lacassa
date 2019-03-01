@@ -12,7 +12,6 @@ class Grammar extends BaseGrammar
      */
     public function compileSelect(BaseBuilder $query)
     {
-
         // If the query does not have any columns set, we'll set the columns to the
         // * character to just get all of the columns from the database. Then we
         // can build the query and concatenate all the pieces together as one.
@@ -78,10 +77,7 @@ class Grammar extends BaseGrammar
         // Adding auto id column in insert queries (it is not binded)
         if (!empty($parameters)) {
             $columns .= ", id, createddate";
-            $parameters .= ", now(), toTimestamp(now())";       // new unique uuid generation
-
-            //$columns .= ", id";
-            //$parameters .= ", now()";       // new unique uuid generation
+            $parameters .= ", now(), toTimestamp(now())";
         }
 
         return "insert into $table ($columns) values ($parameters)";

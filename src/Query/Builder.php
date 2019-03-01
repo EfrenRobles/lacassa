@@ -196,7 +196,6 @@ class Builder extends BaseBuilder
         $cql = $this->toCql();
         $cql = $this->bindQuery($cql);
         $result = $this->executeCql($cql);
-        //$result = Helper::phpdriver2apijson($result);
         return $result;
     }
 

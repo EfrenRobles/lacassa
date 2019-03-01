@@ -156,12 +156,9 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     private function elem2UDT ($elem)
     {
         $result = "";
-
         if (is_array($elem)) {
-
             $result .= '{';
             $each_result = "";
-
             foreach ($elem as $key => $value) {
                 if (!is_array($value)) {
                     $each_result .= "{$key}: '$value',";
@@ -169,11 +166,9 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
                     $each_result .= $this->elem2UDT($value) . ",";
                 }
             }
-
             if (substr($each_result, strlen($each_result)-1) == ',') {
                 $each_result = substr($each_result, 0, strlen($each_result)-1);
             }
-
             $result .= $each_result;
             $result .= '}';
         }
@@ -223,7 +218,6 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
                 $binding : "'".$binding."'";
             $query = preg_replace('/\?/', $value, $query, 1);
         }
-
 
         $builder = new Query\Builder($this, $this->getPostProcessor());
 
