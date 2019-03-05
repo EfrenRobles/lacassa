@@ -65,8 +65,7 @@ class PrepareSchema
                           );"
             );
         } catch (\Exception $e) {
-            header('Content-type: application/json');
-            return (json_encode( ['success' => 'error', 'message' => 'Error in type creation']));
+            return self::newline('[ERROR] Error in type creation');
         }
 
         // Checking if the table "campaigns" exists
