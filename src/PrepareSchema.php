@@ -61,7 +61,7 @@ class PrepareSchema
                             city varchar, 
                             region varchar,
                             country varchar,
-                            rest vvarchar
+                            rest varchar
                           );"
             );
         } catch (\Exception $e) {
