@@ -55,17 +55,18 @@ class PrepareSchema
         }
 
         self::newline("[OK] The keyspace exists");
-        $result = self::execStatement(
-              "CREATE TYPE IF NOT EXISTS location ( 
-                        city varchar, 
-                        region varchar,
-                        country varchar,
-                        rest varchar
-                      );"
-        );
-
-        if ($result->count() === 0) {
-            throw new \Exception("Error in type creation");
+        try {
+            $result = self::execStatement(
+                  "CREATE TYPE IF NOT EXISTS location ( 
+                            city varchar, 
+                            region varchar,
+                            country varchar,
+                            rest vvarchar
+                          );"
+            );
+        } catch (\Exception $e) {
+            header('Content-type: application/json');
+            return (json_encode( ['success' => 'error', 'message' => 'Error in type creation']));
         }
 
         // Checking if the table "campaigns" exists
