@@ -33,16 +33,51 @@ class PrepareSchema
               id timeuuid primary key,
               name varchar,
               target varchar,
-              monthlyBudget float,
+              budget float,
               isAutomaticRenew boolean,
               locations set<frozen <location>>,,
               offering varchar,
               differing varchar,
               restInfo varchar,
               webpage varchar,
+              googleentityid varchar,
               createdDate timestamp            
             );
         ";
+
+        $googleAdsAds_tableName = 'googleadsads';
+        $q_googleadsads_schema = "
+            CREATE TABLE IF NOT EXISTS {$googleAdsAds_tableName} (          
+              id timeuuid primary key,
+              customerid varchar,
+              adgroupid varchar,
+              title1 varchar,
+              title2 varchar,
+              title3 varchar,
+              description varchar,
+              description2 varchar,
+              finalurl varchar,
+              type varchar,
+              status varchar,
+              createdDate timestamp            
+            );
+        ";
+
+
+        $googleAdsGroups_tableName = 'googleadsgroups';
+        $q_googleadsads_schema = "
+            CREATE TABLE IF NOT EXISTS {$googleAdsGroups_tableName} (          
+              id timeuuid primary key,
+              customerid varchar,
+              campaignid varchar,
+              name varchar,
+              status varchar,
+              type varchar,
+              cpcbidmicros varchar,
+              createdDate timestamp            
+            );
+        ";
+
 
         // Checking if keyspace exists
         $keyspace = env('DB_KEYSPACE', 'mykeyspace');
@@ -82,6 +117,17 @@ class PrepareSchema
         } else {
             self::newline("The table existed");
         }
+
+
+        $result = self::execStatement($q_googleadsads_schema);
+        self::newline("google ads ads table created");
+
+
+        $result = self::execStatement($q_googleadsads_schema);
+        self::newline("google ads groups table created");
+
+
+
 
     }
 

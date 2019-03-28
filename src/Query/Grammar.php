@@ -76,8 +76,10 @@ class Grammar extends BaseGrammar
 
         // Adding auto id column in insert queries (it is not binded)
         if (!empty($parameters)) {
-            $columns .= ", id, createddate";
-            $parameters .= ", now(), toTimestamp(now())";
+            //$columns .= ", id, createddate";
+            $columns .= ", createddate";
+            //$parameters .= ", now(), toTimestamp(now())";
+            $parameters .= ", toTimestamp(now())";
         }
 
         return "insert into $table ($columns) values ($parameters)";
