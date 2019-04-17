@@ -214,7 +214,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         foreach ($bindings as $binding) {
             //$value = $value = 'string' ==
            // strtolower(gettype($binding)) ? "'" . $binding . "'" : $binding;
-            $value = (!strtolower(gettype($binding)) || Helper::isUuid($binding)) ?
+            $value = (!strtolower(gettype($binding)) || Helper::isUuid($binding) || is_integer($binding)) ?
                 $binding : "'".$binding."'";
             $query = preg_replace('/\?/', $value, $query, 1);
         }
