@@ -6,25 +6,17 @@ use DB;
 
 class PrepareSchema
 {
+    /**
+     * Preparing all DB model schemas
+     *
+     * PRE: field createddata (timestamp) should exists always
+     *
+     * @throws \Exception
+     */
     public static function prepareSchema()
     {
         self::newline("** Preparing Database Schema ** ");
-        return self::prepareSchemaAux();
-    }
 
-    // PRIVATE METHODS
-
-    private static function execStatement($query)
-    {
-        $statement = new \Cassandra\SimpleStatement($query);
-        $session = app('db');
-        $result = $session->execute($statement);
-        return $result;
-    }
-
-
-    private static function prepareSchemaAux()
-    {
         // (1) Table creation
 
         $tableName = "campaigns";
@@ -40,17 +32,18 @@ class PrepareSchema
               differing varchar,
               restInfo varchar,
               webpage varchar,
-              googleentityid varchar,
-              createdDate timestamp            
+              googleentityid bigint,
+              customerid bigint,
+              status varchar,
+              advertisingchanneltype varchar,                             
+              createddate timestamp
             );
         ";
 
         $googleAdsAds_tableName = 'googleadsads';
         $q_googleadsads_schema = "
             CREATE TABLE IF NOT EXISTS {$googleAdsAds_tableName} (          
-              id timeuuid primary key,
-              customerid varchar,
-              adgroupid varchar,
+              id timeuuid primary key, 
               title1 varchar,
               title2 varchar,
               title3 varchar,
@@ -59,22 +52,28 @@ class PrepareSchema
               finalurl varchar,
               type varchar,
               status varchar,
-              createdDate timestamp            
+              customerid bigint,
+              adgroupid varchar,              
+              campaignid varchar,
+              googleentityid bigint, 
+              createddate timestamp            
             );
         ";
 
 
         $googleAdsGroups_tableName = 'googleadsgroups';
-        $q_googleadsads_schema = "
+        $q_googleadsagroups_schema = "
             CREATE TABLE IF NOT EXISTS {$googleAdsGroups_tableName} (          
-              id timeuuid primary key,
-              customerid varchar,
+              id timeuuid primary key,              
               campaignid varchar,
               name varchar,
               status varchar,
               type varchar,
               cpcbidmicros varchar,
-              createdDate timestamp            
+              createddate timestamp,
+              googleentityid bigint,
+              customerid bigint
+                          
             );
         ";
 
@@ -89,10 +88,10 @@ class PrepareSchema
             throw new \Exception("The keyspace '{$keyspace}' does not exist");
         }
 
-        self::newline("[OK] The keyspace exists");
+        self::newline("The keyspace exists");
         try {
             $result = self::execStatement(
-                  "CREATE TYPE IF NOT EXISTS location ( 
+                "CREATE TYPE IF NOT EXISTS location ( 
                             city varchar, 
                             region varchar,
                             country varchar,
@@ -123,16 +122,140 @@ class PrepareSchema
         self::newline("google ads ads table created");
 
 
-        $result = self::execStatement($q_googleadsads_schema);
+        $result = self::execStatement($q_googleadsagroups_schema);
         self::newline("google ads groups table created");
 
 
+////////////////////////////////////////
 
+        $tableName = "userlogins";
+        $q_userlogins_schema = "
+            CREATE TABLE IF NOT EXISTS {$tableName} (          
+              id timeuuid ,              
+              userid varchar,
+              authtoken varchar primary key, 
+              expiresat varchar,
+              scopes varchar,
+              createddate timestamp
+            );
+        ";
+
+        $result = self::execStatement($q_userlogins_schema);
+        self::newline("user logins table created");
+
+
+        $tableName = "users";
+        $q_users_schema = "
+            CREATE TABLE IF NOT EXISTS {$tableName} (          
+              userid int primary key,              
+              first_name varchar, 
+              last_name varchar,
+              googleentityid bigint, 
+              currencycode varchar, 
+              datetimezone varchar, 
+              createddate timestamp
+            );
+        ";
+
+        $result = self::execStatement($q_users_schema);
+        self::newline("user table created");
+
+
+        $tableName = "companies";
+        $q_companies_schema = "
+            CREATE TABLE IF NOT EXISTS {$tableName} (          
+              companyid int primary key,              
+              active varchar, 
+              address varchar, 
+              google_ads_id varchar,              
+              industry_id varchar,              
+              name varchar,              
+              createddate timestamp
+            );
+        ";
+
+        $result = self::execStatement($q_companies_schema);
+        self::newline("companies table created");
+
+
+        $tableName = "adgroupkeywords";
+        $q_companies_schema = "
+            CREATE TABLE IF NOT EXISTS {$tableName} (          
+              id timeuuid primary key,   
+              googleentityid bigint,   
+              customerid bigint, 
+              adgroupid varchar, 
+              keyword varchar,              
+              matchtype varchar,               
+              createddate timestamp
+            );
+        ";
+
+        $result = self::execStatement($q_companies_schema);
+        self::newline("adgroupkeywordstable created");
+
+
+        $tableSchemas = [
+            [
+                'name' => "campaigncriterions",
+                'schema' => "
+                        CREATE TABLE IF NOT EXISTS campaigncriterions (          
+                          id timeuuid primary key,              
+                          googleentityid bigint,
+                          customerid bigint,
+                          campaignid varchar,                            
+                          radius varchar, 
+                          streetaddress varchar, 
+                          cityname varchar, 
+                          postalcode varchar , 
+                          countrycode varchar,   
+                          microlatitude varchar,  
+                          microlongitude varchar,               
+                          createddate timestamp
+                        );
+                    "
+            ],
+            [
+                'name' => "customerclients",
+                'schema' => "
+                        CREATE TABLE IF NOT EXISTS customerclients (          
+                          googleentityid bigint primary key, 
+                          userid timeuuid,                                          
+                          customerid bigint,                                                
+                          level varchar, 
+                          hidden boolean,               
+                          parentgoogleentityid bigint, 
+                          parentgoogleentityname varchar,                            
+                          createddate timestamp
+                        );
+                    "
+            ]
+        ];
+
+
+        foreach ($tableSchemas as $tableSchema){
+            $result = self::execStatement($tableSchema['schema']);
+            self::newline("{$tableSchema['schema']} created");
+        }
 
     }
 
-    private static function newline($line) {
-        echo $line . "<BR /><BR />";
+
+    // PRIVATE METHODS
+
+
+    private static function execStatement($query)
+    {
+        $statement = new \Cassandra\SimpleStatement($query);
+        $session = app('db');
+        $result = $session->execute($statement);
+        return $result;
+    }
+
+
+    private static function newline($line)
+    {
+        print("\n[*] {$line}\n");
     }
 
 }
