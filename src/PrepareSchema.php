@@ -167,7 +167,8 @@ class PrepareSchema
               companyid int primary key,              
               active varchar, 
               address varchar, 
-              google_ads_id varchar,              
+              google_ads_id varchar,
+              googleentityid bigint,               
               industry_id varchar,              
               name varchar,              
               createddate timestamp
@@ -226,6 +227,22 @@ class PrepareSchema
                           hidden boolean,               
                           parentgoogleentityid bigint, 
                           parentgoogleentityname varchar,                            
+                          createddate timestamp
+                        );
+                    "
+            ],
+            [
+                'name' => "metrics",
+                'schema' => "
+                        CREATE TABLE IF NOT EXISTS metrics (    
+                          id timeuuid primary key,             
+                          googleentityid bigint,                                                                   
+                          customerid bigint,                                                 
+                          source varchar, 
+                          metric varchar, 
+                          value varchar, 
+                          date varchar, 
+                          campaignid varchar,                                                    
                           createddate timestamp
                         );
                     "
