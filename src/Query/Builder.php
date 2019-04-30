@@ -195,6 +195,12 @@ class Builder extends BaseBuilder
         }
         $cql = $this->toCql();
         $cql = $this->bindQuery($cql);
+
+        // TODO: project
+        if (strpos($cql, 'select * from googleadsgroups') !== false){
+            $cql .= ' ALLOW FILTERING';
+        }
+
         $result = $this->executeCql($cql);
         return $result;
     }
@@ -208,7 +214,7 @@ class Builder extends BaseBuilder
     public function bindQuery($cql)
     {
         foreach ($this->getBindings() as $binding) {
-            $value = (is_numeric($binding) || Helper::isUuid($binding)) ?
+            $value = (Helper::isAvoidingQuotes($binding)) ?
                 $binding : "'" . $binding . "'";
             $cql = preg_replace('/\?/', $value, $cql, 1);
         }

@@ -16,4 +16,14 @@ class Helper
         return is_string($value) && (bool)preg_match($pIsUuid, $value);
     }
 
+
+    public static function isAvoidingQuotes($binding)
+    {
+        return (
+            !strtolower(gettype($binding))
+            || Helper::isUuid($binding)
+            || is_integer($binding)
+            || is_float($binding)
+        );
+    }
 }

@@ -102,6 +102,9 @@ class PrepareSchema
             return self::newline('[ERROR] Error in type creation');
         }
 
+
+
+
         // Checking if the table "campaigns" exists
         $result = self::execStatement(
             "SELECT table_name
@@ -232,10 +235,11 @@ class PrepareSchema
                     "
             ],
             [
+                // id timeuuid primary key,
                 'name' => "metrics",
                 'schema' => "
-                        CREATE TABLE IF NOT EXISTS metrics (    
-                          id timeuuid primary key,             
+                        CREATE TABLE IF NOT EXISTS metrics (                              
+                          metricid varchar primary key, 
                           googleentityid bigint,                                                                   
                           customerid bigint,                                                 
                           source varchar, 

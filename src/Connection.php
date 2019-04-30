@@ -10,6 +10,7 @@ use Adrianheras\Lumencassandra\Helper\Helper;
 
 class Connection extends BaseConnection implements ConnectionResolverInterface
 {
+
     /**
      * The Cassandra connection handler.
      *
@@ -158,6 +159,8 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
      */
     public function statement($query, $bindings = [])
     {
+
+
         foreach ($bindings as $binding) {
 
             if (is_bool($binding)) {
@@ -165,7 +168,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
             } elseif (is_array($binding)) {
                 $value = $this->elem2UDT($binding);
             } else {
-                $value = $this->isAvoidingQuotes($binding)  ? $binding : "'" . $binding . "'";
+                $value = Helper::isAvoidingQuotes($binding)  ? $binding : "'" . $binding . "'";
             }
 
             $query = preg_replace('/\?/', $value, $query, 1);
@@ -193,7 +196,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         // to execute the statement and then we'll use PDO to fetch the affected.
 
         foreach ($bindings as $binding) {
-            $value = $this->isAvoidingQuotes($binding)  ? $binding : "'" . $binding . "'";
+            $value = Helper::isAvoidingQuotes($binding)  ? $binding : "'" . $binding . "'";
             $query = preg_replace('/\?/', $value, $query, 1);
         }
 
@@ -292,21 +295,4 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         return $result;
     }
 
-
-    /**
-     * Returns if avoiding adding quotes to the specific binding
-     *
-     * @param $binding
-     * @param $fieldName
-     * @return bool
-     */
-    private function isAvoidingQuotes($binding)
-    {
-        return (
-            !strtolower(gettype($binding))
-            || Helper::isUuid($binding)
-            || is_integer($binding)
-            || is_float($binding)
-        );
-    }
 }
