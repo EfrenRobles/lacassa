@@ -19,6 +19,11 @@ class PrepareSchema
 
         // (1) Table creation
 
+//        offering varchar,
+//              differing varchar,
+//              restInfo varchar,
+//              webpage varchar,
+
         $tableName = "campaigns";
         $q_campaigns_schema = "
             CREATE TABLE IF NOT EXISTS {$tableName} (          
@@ -27,11 +32,7 @@ class PrepareSchema
               target varchar,
               budget float,
               isAutomaticRenew boolean,
-              locations set<frozen <location>>,,
-              offering varchar,
-              differing varchar,
-              restInfo varchar,
-              webpage varchar,
+              locations set<frozen <location>>,            
               googleentityid bigint,
               customerid bigint,
               status varchar,

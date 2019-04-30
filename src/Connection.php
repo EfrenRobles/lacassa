@@ -175,7 +175,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         }
         $builder = new Query\Builder($this, $this->getPostProcessor());
 
-        print("\n\n{$query}\n\n");
+        //print("\n\n{$query}\n\n");
 
         return $builder->executeCql($query);
     }
