@@ -193,11 +193,15 @@ class Builder extends BaseBuilder
         if (is_null($this->columns)) {
             $this->columns = $columns;
         }
+
         $cql = $this->toCql();
         $cql = $this->bindQuery($cql);
 
         // TODO: project
-        if (strpos($cql, 'select * from googleadsgroups') !== false){
+        //todos los index
+        if (strpos($cql, 'limit 1') === false){
+            $cql .= ' where googleentityid > 0 ALLOW FILTERING';
+        } elseif (strpos($cql, 'select * from googleadsgroups') !== false){
             $cql .= ' ALLOW FILTERING';
         }
 
