@@ -85,7 +85,7 @@ class Connection extends BaseConnection
     protected function createConnection(array $config)
     {
         $cluster   = \Cassandra::cluster()
-            ->withContactPoints('node.cassandra.l4lb.thisdcos.directory')
+            ->withContactPoints('172.12.31.238', '172.12.28.97', '172.12.6.185')
             ->withPort(9042)->build();
         $keyspace  = $config['keyspace'];
         $connection   = $cluster->connect($keyspace);
