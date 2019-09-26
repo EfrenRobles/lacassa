@@ -1,5 +1,5 @@
 {
-    "name": "cubettech/lacassa",
+    "name": "informatica-cne/lacassa",
     "type": "library",
     "description": "Cassandra based query builder for laravel.",
     "license": "MIT",
@@ -23,6 +23,10 @@
         {
             "name": "Renny M Roy",
             "email": "renny.roy@cubettech.com"
+        },
+        {
+            "name": "Manuel Corvalán",
+            "email": "mcorvalan@cne.cl"
         }
     ],
     "autoload": {
