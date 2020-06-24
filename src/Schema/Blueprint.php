@@ -3,7 +3,6 @@
 use Illuminate\Database\Connection;
 use \Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;
 
-
 class Blueprint extends \Illuminate\Database\Schema\Blueprint
 {
     /**
@@ -32,7 +31,8 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
     public function getAddedColumns()
     {
         return array_filter(
-            $this->columns, function ($column) {
+            $this->columns,
+            function ($column) {
                 return ! $column->change;
             }
         );
@@ -82,8 +82,8 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
     public function compilePrimary()
     {
         $primaryKey = $this->primary;
-        if($primaryKey) {
-            if('primary' == $primaryKey->name) {
+        if ($primaryKey) {
+            if ('primary' == $primaryKey->name) {
                 return sprintf('primary key (%s) ', implode(', ', $primaryKey->columns));
             }
         }
@@ -283,5 +283,4 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
     {
         return $this->addColumn('varint', $column);
     }
-
 }
