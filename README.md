@@ -42,6 +42,7 @@ Include to .env file the filled data below:
 	DB_KEYSPACE=mykeyspace
 	DB_USERNAME=
 	DB_PASSWORD=
+	DB_AUTH_TYPE= empty or userCredentials
 
 ## **Configuration**
 
@@ -58,6 +59,7 @@ And add a new cassandra connection:
             'keyspace' => env('DB_DATABASE', 'cassandra_db'),
             'username' => env('DB_USERNAME', ''),
             'password' => env('DB_PASSWORD', ''),
+            'authType' => env('DB_AUTH_TYPE', ''),
      ],
 
 ### **Auth**

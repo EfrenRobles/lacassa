@@ -1,10 +1,17 @@
-<?php namespace Cubettech\Lacassa\Query;
+<?php 
+
+namespace Cubettech\Lacassa\Query;
 
 use Illuminate\Database\Query\Grammars\Grammar as BaseGrammar;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 
 class Grammar extends BaseGrammar
 {
+
+    private const INSERT_ACTION = 'insert';
+    private const UPDATE_ACTION = 'update';
+    private const DELETE_ACTION = 'delete';
+
     /**
      * [compileSelect compiles the cql select]
      * @param  BaseBuilder $query [description]
@@ -115,6 +122,10 @@ class Grammar extends BaseGrammar
             //$parameters .= ", now(), toTimestamp(now())";
             $parameters .= ", toTimestamp(now())";
         }
+        
+        if($query->applyTimestamps()){
+            $this->performTimestamps(self::INSERT_ACTION, $columns, $parameters);
+        }
 
         return "insert into $table ($columns) values ($parameters)";
     }
@@ -191,6 +202,9 @@ class Grammar extends BaseGrammar
             $upateCollections = $columns ? ', ' . $upateCollections : $upateCollections;
         }
 
+        if($query->applyTimestamps()){
+            $this->performTimestamps(self::UPDATE_ACTION, $columns, $upateCollections);
+        }
         return trim("update {$table} set $columns $upateCollections $wheres");
     }
 
@@ -286,6 +300,36 @@ class Grammar extends BaseGrammar
         $table = $this->wrapTable($query->from);
         $value = implode(", ", $columns);
         return "CREATE INDEX IF NOT EXISTS ON " . $table . "(" . $value . ")";
+    }
+
+    private function performTimestamps($action, &$columns, &$parameters){
+
+        $createdAt = env('CASSANDRA_INSERT_TIMESTAMP_FIELD', 'created_at');
+        $updatedAt = env('CASSANDRA_UPDATE_TIMESTAMP_FIELD', 'updated_at');
+        $deletedAt = env('CASSANDRA_DELETE_TIMESTAMP_FIELD', 'deleted_at');
+
+        
+        switch ($action) {
+            case self::INSERT_ACTION:
+                if (!empty($parameters)) {
+                    $columns .= ", $createdAt, $updatedAt";
+                    $parameters .= ", toTimestamp(now()), toTimestamp(now())";
+                }   
+                break;
+
+            case self::UPDATE_ACTION:
+                
+                $columns .= ", $updatedAt = toTimestamp(now())";
+                
+                break;
+
+            case self::DELETE_ACTION:
+                
+                $columns .= ", $deletedAt = toTimestamp(now())";
+                
+                break;
+        }
+    
     }
 
 }

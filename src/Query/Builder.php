@@ -16,6 +16,9 @@ use Cubettech\Lacassa\Helper\Helper;
 
 class Builder extends BaseBuilder
 {
+
+    private $allowFilters = false;
+    private $applyTimestamps = true;
     /**
      * The current query value bindings.
      *
@@ -203,11 +206,7 @@ class Builder extends BaseBuilder
         $cql = $this->toCql();
         $cql = $this->bindQuery($cql);
 
-        // TODO: project
-        //todos los index
-        if (strpos($cql, 'limit 1') === false){
-            $cql .= ' where googleentityid > 0 ALLOW FILTERING';
-        } elseif (strpos($cql, 'select * from googleadsgroups') !== false){
+        if($this->allowFilters){
             $cql .= ' ALLOW FILTERING';
         }
 
@@ -447,5 +446,19 @@ class Builder extends BaseBuilder
         $result = $this->executeCql($cql);
 
         return $result;
+    }
+
+    public function allowFiltering($value = true){
+        $this->allowFilters = $value;
+        return $this;
+    }
+
+    public function withoutTimestamps($value = true){
+        $this->applyTimestamps = !$value;
+        return $this;
+    }
+
+    public function applyTimestamps(){
+        return $this->applyTimestamps;
     }
 }

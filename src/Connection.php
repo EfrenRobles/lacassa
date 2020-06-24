@@ -92,8 +92,21 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     {
         $cluster   = Cassandra::cluster()
                      ->withContactPoints($config['host'])
-                     ->withPort((int)$config['port'])
-                     ->build();
+                     ->withPort((int)$config['port']);
+
+        if(!empty($config['authType'])){
+            switch ($config['authType']){
+                case 'userCredentials':
+                    if (empty($config['username']) || empty($config['password'])) {
+                        throw new \Exception('You have selected userCredentials auth type but you haven\'t provided username and password, please check your config params');
+                    }
+                    $cluster = $cluster->withCredentials($config['username'], $config['password']);
+                    break;
+            }
+        }
+
+
+        $cluster = $cluster->build();
         $keyspace  = $config['keyspace'];
 
         $connection   = $cluster->connect($keyspace);

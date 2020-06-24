@@ -1,4 +1,6 @@
-<?php namespace Cubettech\Lacassa\Schema;
+<?php 
+
+namespace Cubettech\Lacassa\Schema;
 
 use Illuminate\Database\Connection;
 use \Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;
