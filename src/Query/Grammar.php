@@ -8,16 +8,16 @@ class Grammar extends BaseGrammar
     /**
      * [compileSelect compiles the cql select]
      * @param  BaseBuilder $query [description]
-     * @return [type]             [description]
+     * @return string [type]             [description]
      */
-    public function compileSelect(BaseBuilder $query)
+    public function compileSelect(BaseBuilder $query): string
     {
         // If the query does not have any columns set, we'll set the columns to the
         // * character to just get all of the columns from the database. Then we
         // can build the query and concatenate all the pieces together as one.
         $original = $query->columns;
 
-        if (is_null($query->columns)) {
+        if (!is_array($query->columns)) {
             $query->columns = ['*'];
         }
 
@@ -29,18 +29,52 @@ class Grammar extends BaseGrammar
                 $this->compileComponents($query)
             )
         );
+
         $query->columns = $original;
 
         return $cql;
     }
 
     /**
-     * Compile an insert statement into CQL.
+     * Compile the components necessary for a select clause.
      *
-     * @param  Cubettech\Lacassa\Query $query
-     * @param  array $values
-     * @return string
+     * @param  \Illuminate\Database\Query\Builder $query
+     * @return array
      */
+    protected function compileComponents(BaseBuilder $query)
+    {
+        $sql = [];
+        foreach ($query->wheres as $key => $where) {
+            if ($where['type'] === 'Nested') {
+                $query->wheres = $where['query']->wheres;
+            }
+
+            // Cassandra doesnt support NOT
+            if ($where['type'] === 'NotNull') {
+                unset($query->wheres[$key]);
+            }
+        }
+        foreach ($this->selectComponents as $component) {
+            // To compile the query, we'll spin through each component of the query and
+            // see if that component exists. If it does we'll just call the compiler
+            // function for the component which is responsible for making the SQL.
+            if (null !== $query->$component) {
+                $method = 'compile' . ucfirst($component);
+
+                $sql[$component] = $this->$method($query, $query->$component);
+            }
+        }
+
+        return $sql;
+    }
+
+    /**
+      * Compile an insert statement into CQL.
+      *
+      * @param  Cubettech\Lacassa\Query $query
+      * @param  array               $values
+      * @return string
+      */
     public function compileInsert(BaseBuilder $query, array $values)
     {
         // Essentially we will force every insert to be treated as a batch insert which

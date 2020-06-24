@@ -37,10 +37,11 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
             }
         );
     }
+
     /**
      * Get the raw SQL statements for the blueprint.
      *
-     * @param  \Illuminate\Database\Connection              $connection
+     * @param  \Illuminate\Database\Connection $connection
      * @param  \Illuminate\Database\Schema\Grammars\Grammar $grammar
      * @return array
      */
@@ -53,11 +54,11 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
         // grammar which is used to build the necessary SQL statements to build
         // the blueprint element, so we'll just call that compilers function.
         foreach ($this->commands as $command) {
-            $method = 'compile'.ucfirst($command->name);
+            $method = 'compile' . ucfirst($command->name);
 
             if (method_exists($grammar, $method)) {
-                if (! is_null($sql = $grammar->$method($this, $command, $connection))) {
-                    $statements = array_merge($statements, (array) $sql);
+                if (!is_null($sql = $grammar->$method($this, $command, $connection))) {
+                    $statements = array_merge($statements, (array)$sql);
                 }
             }
         }
@@ -68,17 +69,18 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
      * Specify the primary key(s) for the table.
      *
      * @param  string|array $columns
-     * @param  string       $name
-     * @param  string|null  $algorithm
+     * @param  string $name
+     * @param  string|null $algorithm
      * @return \Illuminate\Support\Fluent
      */
     public function primary($columns, $name = null, $algorithm = null)
     {
-        $columns = (array) $columns;
+        $columns = (array)$columns;
         //$index = $index ?: $this->createIndexName($type, $columns);
         $this->primary = $command = $this->createCommand('primary', compact('columns', 'algorithm'));
         return $command;
     }
+
     public function compilePrimary()
     {
         $primaryKey = $this->primary;
@@ -89,6 +91,7 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
         }
         return;
     }
+
     /**
      * Create a new ascii column on the table.
      *

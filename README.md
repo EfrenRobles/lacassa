@@ -2,11 +2,13 @@
 
 Cassandra support for Lumen 5.7.x database query builder
 
+A Query builder with support for Cassandra, using the original Laravel API. This library extends the original Laravel classes, so it uses exactly the same methods.
+
 ## **Table of contents**
 
-* Prerequisites
-
 * Installation
+
+* Configuration
 
 * Query Builder
 
@@ -16,16 +18,17 @@ Cassandra support for Lumen 5.7.x database query builder
 
 * Examples
 
-## **Prerequisites**
-
-* Datastax PHP Driver for Apache Cassandra (https://github.com/datastax/php-driver)
-* PHP 7.*
-
 ## **Installation**
 
-Using composer:
+Make sure you have the DataStax PHP Driver for Apache Cassandra installed. You can find installation instructions at https://github.com/datastax/php-driver
+or 
+https://github.com/datastax/php-driver/blob/master/ext/README.md
 
-    composer require adrianheras/lumencassandra
+*datastax php-driver requires php version 5.6+*
+
+Installation using composer:
+
+    composer require cubettech/lacassa
 
 Add the line below in the "Register Service Provider" of bootstrap/app.php file:
 
@@ -39,6 +42,23 @@ Include to .env file the filled data below:
 	DB_KEYSPACE=mykeyspace
 	DB_USERNAME=
 	DB_PASSWORD=
+
+## **Configuration**
+
+Change your default database connection name in config/database.php:
+
+    'default' => env('DB_CONNECTION', 'cassandra'),
+
+And add a new cassandra connection:
+
+    'cassandra' => [
+    	    'driver' => 'Cassandra',
+    	    'host' => env('DB_HOST', 'localhost'),
+            'port' => env('DB_PORT', 9042),
+            'keyspace' => env('DB_DATABASE', 'cassandra_db'),
+            'username' => env('DB_USERNAME', ''),
+            'password' => env('DB_PASSWORD', ''),
+     ],
 
 ### **Auth**
 
@@ -59,6 +79,24 @@ You can use Laravel's native Auth functionality for cassandra, make sure your co
 
 Preparing the schema in Cubettech\Lacassa\PrepareSchema
 
+The database driver also has (limited) schema builder support. You can easily manipulate tables and set indexes:
+
+        Schema::create(
+            'users', function ($table) {
+                $table->int('id');
+	            $table->text('name');
+	            $table->text('email');
+	            $table->text('password');
+                $table->text('remember_token');
+	            $table->setCollection('phn', 'bigint');
+                $table->listCollection('hobbies', 'text');
+                $table->mapCollection('friends', 'text', 'text');
+                $table->primary(['id']);
+          });
+
+DROP table
+
+        Schema::drop('users');
 
 # **CQL data types supported**
 
@@ -259,3 +297,25 @@ To delete a model, simply call the delete method on the instance. We can delete 
 We can also perform delete by the column in a table using deleteColumn method:
 
     $emp = DB::table('emp')->where('emp_id', 3)->deleteColumn();
+    
+**Model**
+
+Model 請extends '''use Cubettech\Lacassa\Eloquent\Model;''' 這個Model，然後$connection選擇Cassandra的connection如即可
+例如：config/database.php
+```
+'cassandra' => [
+            'driver' => 'Cassandra',
+            'host' => env('CASSANDRA_HOST', '127.0.0.1'),
+            'port' => env('CASSANDRA_PORT', 9048),
+            'keyspace' => env('CASSANDRA_KEYSPACE', 'quote'),
+            'database' => env('CASSANDRA_KEYSPACE', 'quote')
+        ]
+```
+```
+use Cubettech\Lacassa\Eloquent\Model
+
+class CassandraTable extends Model
+{
+
+    protected $connection = 'cassandra';
+```

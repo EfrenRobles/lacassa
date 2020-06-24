@@ -29,7 +29,7 @@ class Builder extends BaseBuilder
         'order' => [],
         'union' => [],
         'updateCollection' => [],
-        'insertCollection' => []
+        'insertCollection' => [],
     ];
     /**
      * The where constraints for the query.
@@ -144,7 +144,7 @@ class Builder extends BaseBuilder
         '<' => '$lt',
         '<=' => '$lte',
         '>' => '$gt',
-        '>=' => '$gte'
+        '>=' => '$gte',
     ];
 
     /**
@@ -175,6 +175,7 @@ class Builder extends BaseBuilder
      * Set the table which the query is targeting.
      *
      * @param  string $table
+     *
      * @return $this
      */
     public function from($collection)
@@ -186,13 +187,18 @@ class Builder extends BaseBuilder
      * Execute the query as a "select" statement.
      *
      * @param  array $columns
-     * @return Cassandra\Rows
+     *
+     * @return Collection
      */
-    public function get($columns = ['*'])
+    public function get($columns = ['*']): Collection
     {
-        if (is_null($this->columns)) {
+        if (null === $this->columns) {
             $this->columns = $columns;
         }
+        foreach ($this->wheres as &$where) {
+            $where['column'] = explode('.', $where['column'])[1] ?? explode('.', $where['column'])[0];
+        }
+        unset($where);
 
         $cql = $this->toCql();
         $cql = $this->bindQuery($cql);
@@ -206,13 +212,15 @@ class Builder extends BaseBuilder
         }
 
         $result = $this->executeCql($cql);
+
         return $result;
     }
 
     /**
      * Bind the query with its parameters.
      *
-     * @param  object $cql
+     * @param  string $cql
+     *
      * @return $cql
      */
     public function bindQuery($cql)
@@ -222,6 +230,7 @@ class Builder extends BaseBuilder
                 $binding : "'" . $binding . "'";
             $cql = preg_replace('/\?/', $value, $cql, 1);
         }
+
         return $cql;
     }
 
@@ -230,20 +239,23 @@ class Builder extends BaseBuilder
      * Execute the CQL query.
      *
      * @param  object $cql
-     * @return Cassandra\Rows
+     *
+     * @return Collection
      */
     public function executeCql($cql)
     {
         $statement = new Cassandra\SimpleStatement($cql);
         $future = $this->connection->getCassandraConnection()->executeAsync($statement);
         $result = $future->get();
-        return $result;
+
+        return collect($result);
     }
 
     /**
      * Delete a record from the database.
      *
      * @param  mixed $id
+     *
      * @return Cassandra\Rows
      */
     public function deleteRow()
@@ -251,6 +263,7 @@ class Builder extends BaseBuilder
         $query = $this->grammar->compileDelete($this);
         $cql = $this->bindQuery($query);
         $result = $this->executeCql($cql);
+
         return $result;
     }
 
@@ -258,6 +271,7 @@ class Builder extends BaseBuilder
      * Delete a column from the database.
      *
      * @param  mixed $columns
+     *
      * @return Cassandra\Rows
      */
     public function deleteColumn($columns)
@@ -266,6 +280,7 @@ class Builder extends BaseBuilder
         $query = $this->grammar->compileDelete($this);
         $cql = $this->bindQuery($query);
         $result = $this->executeCql($cql);
+
         return $result;
     }
 
@@ -283,6 +298,7 @@ class Builder extends BaseBuilder
      * Retrieve the "count" result of the query.
      *
      * @param  string $columns
+     *
      * @return Cassandra\Rows
      */
     public function count($columns = '*')
@@ -293,10 +309,12 @@ class Builder extends BaseBuilder
 
     /**
      * [updateCollection used to update the colletions like set, list and map]
+     *
      * @param  [string] $type      [description]
      * @param  [string] $column    [description]
      * @param  [string] $operation [description]
      * @param  [string] $value     [description]
+     *
      * @return [string]            [description]
      */
     public function updateCollection($type, $column, $operation = null, $value = null)
@@ -308,13 +326,14 @@ class Builder extends BaseBuilder
         // Here we will make some assumptions about the operator. If only 2 values are
         // passed to the method, we will assume that the operator is an equals sign
         // and keep going. Otherwise, we'll require the operator to be passed in.
-        if (func_num_args() == 3) {
+        if (func_num_args() === 3) {
             $value = $operation;
             $operation = null;
         }
         $updateCollection = compact('type', 'column', 'value', 'operation');
         $this->updateCollections[] = $updateCollection;
         $this->addCollectionBinding($updateCollection, 'updateCollection');
+
         return $this;
     }
 
@@ -323,6 +342,7 @@ class Builder extends BaseBuilder
      *
      * @param  mixed $value
      * @param  string $type
+     *
      * @return $this
      *
      * @throws \InvalidArgumentException
@@ -340,6 +360,7 @@ class Builder extends BaseBuilder
      * Update a record in the database.
      *
      * @param  array $values
+     *
      * @return int
      */
     public function update(array $values = [])
@@ -361,7 +382,6 @@ class Builder extends BaseBuilder
      */
     public function insert(array $values = [])
     {
-        $insertCollectionArray = [];
         // Since every insert gets treated like a batch insert, we will make sure the
         // bindings are structured in a way that is convenient when building these
         // inserts statements by verifying these elements are actually an array.
@@ -398,9 +418,11 @@ class Builder extends BaseBuilder
 
     /**
      * [insertCollection insert a colletion type in cassandra]
+     *
      * @param  [type] $type   [description]
      * @param  [type] $column [description]
      * @param  [type] $value  [description]
+     *
      * @return [type]         [description]
      */
     public function insertCollection($type, $column, $value)
@@ -408,18 +430,22 @@ class Builder extends BaseBuilder
         $insertCollection = compact('type', 'column', 'value');
         $this->insertCollections[] = $insertCollection;
         $this->addCollectionBinding($insertCollection, 'insertCollection');
+
         return $this;
     }
 
     /**
      * [index description]
+     *
      * @param  [type] $columns [description]
+     *
      * @return [type]          [description]
      */
     public function index($columns = [])
     {
         $cql = $this->grammar->compileIndex($this, $columns);
         $result = $this->executeCql($cql);
+
         return $result;
     }
 }
