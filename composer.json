@@ -1,12 +1,12 @@
 {
-    "name": "luminositylab/lacassa",
+    "name": "cubettech/lacassa",
     "type": "library",
-    "description": "Cassandra based query builder for laravel.",
+    "description": "Cassandra support for Lumen 5.7.x database query builder",
     "license": "MIT",
     "keywords": [
         "cassandra",
         "nosql",
-        "laravel",
+        "lumen",
         "database",
         "query builder",
         "cql",
@@ -27,11 +27,15 @@
         {
             "name": "Manuel Corvalán",
             "email": "mcorvalan@cne.cl"
+        },
+	    {
+            "name": "Adrián Heras",
+            "email": "adrianheras@hotmail.com"
         }
     ],
     "autoload": {
         "psr-4": {
-            "Cubettech\\Lacassa\\":"src/"
+            "Adrianheras\\Lumencassandra\\":"src/"
             }
         },
     "minimum-stability": "dev",

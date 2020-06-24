@@ -1,10 +1,18 @@
-<?php namespace Cubettech\Lacassa\Query;
+<?php
 
+namespace Cubettech\Lacassa\Query;
+
+use Closure;
+use DateTime;
 use InvalidArgumentException;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Cubettech\Lacassa\Connection;
 use Cassandra;
+use Cubettech\Lacassa\Helper\Helper;
+
 
 class Builder extends BaseBuilder
 {
@@ -15,11 +23,11 @@ class Builder extends BaseBuilder
      */
     public $bindings = [
         'select' => [],
-        'join'   => [],
-        'where'  => [],
+        'join' => [],
+        'where' => [],
         'having' => [],
-        'order'  => [],
-        'union'  => [],
+        'order' => [],
+        'union' => [],
         'updateCollection' => [],
         'insertCollection' => []
     ];
@@ -185,8 +193,18 @@ class Builder extends BaseBuilder
         if (is_null($this->columns)) {
             $this->columns = $columns;
         }
+
         $cql = $this->toCql();
         $cql = $this->bindQuery($cql);
+
+        // TODO: project
+        //todos los index
+        if (strpos($cql, 'limit 1') === false){
+            $cql .= ' where googleentityid > 0 ALLOW FILTERING';
+        } elseif (strpos($cql, 'select * from googleadsgroups') !== false){
+            $cql .= ' ALLOW FILTERING';
+        }
+
         $result = $this->executeCql($cql);
         return $result;
     }
@@ -200,11 +218,13 @@ class Builder extends BaseBuilder
     public function bindQuery($cql)
     {
         foreach ($this->getBindings() as $binding) {
-            $value = is_numeric($binding) ? $binding : "'".$binding."'";
+            $value = (Helper::isAvoidingQuotes($binding)) ?
+                $binding : "'" . $binding . "'";
             $cql = preg_replace('/\?/', $value, $cql, 1);
         }
         return $cql;
     }
+
 
     /**
      * Execute the CQL query.
@@ -215,10 +235,11 @@ class Builder extends BaseBuilder
     public function executeCql($cql)
     {
         $statement = new Cassandra\SimpleStatement($cql);
-        $future    = $this->connection->getCassandraConnection()->executeAsync($statement);
-        $result    = $future->get();
+        $future = $this->connection->getCassandraConnection()->executeAsync($statement);
+        $result = $future->get();
         return $result;
     }
+
     /**
      * Delete a record from the database.
      *
@@ -267,7 +288,7 @@ class Builder extends BaseBuilder
     public function count($columns = '*')
     {
         $result = $this->get();
-        return (int) $result->count();
+        return (int)$result->count();
     }
 
     /**
@@ -281,8 +302,8 @@ class Builder extends BaseBuilder
     public function updateCollection($type, $column, $operation = null, $value = null)
     {
         //Check if the type is anyone in SET, LIST or MAP. else throw ERROR.
-        if (! in_array(strtolower($type), $this->collectionTypes)) {
-            throw new InvalidArgumentException("Invalid binding type: {$type}, Should be any one of ".implode(', ', $this->collectionTypes));
+        if (!in_array(strtolower($type), $this->collectionTypes)) {
+            throw new InvalidArgumentException("Invalid binding type: {$type}, Should be any one of " . implode(', ', $this->collectionTypes));
         }
         // Here we will make some assumptions about the operator. If only 2 values are
         // passed to the method, we will assume that the operator is an equals sign
@@ -300,7 +321,7 @@ class Builder extends BaseBuilder
     /**
      * Add a binding to the query.
      *
-     * @param  mixed  $value
+     * @param  mixed $value
      * @param  string $type
      * @return $this
      *
@@ -308,7 +329,7 @@ class Builder extends BaseBuilder
      */
     public function addCollectionBinding($value, $type = 'updateCollection')
     {
-        if (! array_key_exists($type, $this->bindings)) {
+        if (!array_key_exists($type, $this->bindings)) {
             throw new InvalidArgumentException("Invalid binding type: {$type}.");
         }
         $this->bindings[$type][] = $value;
@@ -370,9 +391,9 @@ class Builder extends BaseBuilder
         // the results. We will need to also flatten these bindings before running
         // the query so they are all in one huge, flattened array for execution.
         return $this->connection->insert(
-              $this->grammar->compileInsert($this, $values),
-              $this->cleanBindings(Arr::flatten($values, 1))
-          );
+            $this->grammar->compileInsert($this, $values),
+            $this->cleanBindings(Arr::flatten($values, 1))
+        );
     }
 
     /**
