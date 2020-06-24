@@ -1,4 +1,4 @@
-<?php namespace Cubettech\Lacassa\Schema;
+<?php namespace Adrianheras\Lumencassandra\Schema;
 
 use Illuminate\Database\Connection;
 use \Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;

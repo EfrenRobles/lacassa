@@ -1,15 +1,14 @@
-## **Lacassa**
+## **Eloquent Cassandra for Lumen 5.7.x**
 
-
-A Query builder with support for Cassandra, using the original Laravel API. This library extends the original Laravel classes, so it uses exactly the same methods.
+Cassandra support for Lumen 5.7.x database query builder
 
 ## **Table of contents**
 
+* Prerequisites
+
 * Installation
 
-* Configuration
-
-* Query 	Builder
+* Query Builder
 
 * Schema
 
@@ -17,38 +16,29 @@ A Query builder with support for Cassandra, using the original Laravel API. This
 
 * Examples
 
+## **Prerequisites**
+
+* Datastax PHP Driver for Apache Cassandra (https://github.com/datastax/php-driver)
+* PHP 7.*
+
 ## **Installation**
 
-Make sure you have the DataStax PHP Driver for Apache Cassandra installed. You can find installation instructions at https://github.com/datastax/php-driver
-or 
-https://github.com/datastax/php-driver/blob/master/ext/README.md
+Using composer:
 
-*datastax php-driver requires php version 5.6+*
+    composer require adrianheras/lumencassandra
 
-Installation using composer:
+Add the line below in the "Register Service Provider" of bootstrap/app.php file:
 
-    composer require cubettech/lacassa
+	$app->register(Adrianheras\Lumencassandra\CassandraServiceProvider::class);
 
-And add the service provider in config/app.php:
+Include to .env file the filled data below:
 
-    Cubettech\Lacassa\CassandraServiceProvider::class,
-
-## **Configuration**
-
-Change your default database connection name in config/database.php:
-
-    'default' => env('DB_CONNECTION', 'cassandra'),
-
-And add a new cassandra connection:
-
-    'cassandra' => [
-    	 	'driver' => 'Cassandra',
-    		'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', 7199),
-            'keyspace' => env('DB_DATABASE', 'cassandra_db'),
-        	'username' => env('DB_USERNAME', ''),
-        	'password' => env('DB_PASSWORD', ''),
-     ],
+	DB_CONNECTION=cassandra
+	DB_HOST=
+	DB_PORT=9042
+	DB_KEYSPACE=mykeyspace
+	DB_USERNAME=
+	DB_PASSWORD=
 
 ### **Auth**
 
@@ -67,24 +57,8 @@ You can use Laravel's native Auth functionality for cassandra, make sure your co
 
 ## **Schema**
 
-The database driver also has (limited) schema builder support. You can easily manipulate tables and set indexes:
+Preparing the schema in Adrianheras\Lumencassandra\PrepareSchema
 
-        Schema::create(
-            'users', function ($table) {
-                $table->int('id');
-	            $table->text('name');
-	            $table->text('email');
-	            $table->text('password');
-                $table->text('remember_token');
-	            $table->setCollection('phn', 'bigint');
-                $table->listCollection('hobbies', 'text');
-                $table->mapCollection('friends', 'text', 'text');
-                $table->primary(['id']);
-          });
-
-DROP table
-
-        Schema::drop('users');
 
 # **CQL data types supported**
 

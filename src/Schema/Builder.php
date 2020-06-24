@@ -1,7 +1,7 @@
-<?php namespace Cubettech\Lacassa\Schema;
+<?php namespace Adrianheras\Lumencassandra\Schema;
 
 use Closure;
-use Cubettech\Lacassa\Connection;
+use Adrianheras\Lumencassandra\Connection;
 
 class Builder extends \Illuminate\Database\Schema\Builder
 {

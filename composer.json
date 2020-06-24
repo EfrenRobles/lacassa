@@ -1,16 +1,15 @@
 {
-    "name": "cubettech/lacassa",
+    "name": "adrianheras/lumencassandra",
     "type": "library",
-    "description": "Cassandra based query builder for laravel.",
+    "description": "Cassandra support for Lumen 5.7.x database query builder",
     "license": "MIT",
     "keywords": [
         "cassandra",
         "nosql",
-        "laravel",
+        "lumen",
         "database",
         "query builder",
-        "cql",
-        "lacassa"
+        "cql"
     ],
     "require": {
         "datastax/php-driver": "^1.2"
@@ -23,11 +22,15 @@
         {
             "name": "Renny M Roy",
             "email": "renny.roy@cubettech.com"
+        },
+	    {
+            "name": "Adrián Heras",
+            "email": "adrianheras@hotmail.com"
         }
     ],
     "autoload": {
         "psr-4": {
-            "Cubettech\\Lacassa\\":"src/"
+            "Adrianheras\\Lumencassandra\\":"src/"
             }
         },
     "minimum-stability": "dev",
