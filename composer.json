@@ -31,6 +31,10 @@
 	    {
             "name": "Adrián Heras",
             "email": "adrianheras@hotmail.com"
+        },
+	    {
+            "name": "Juan Solá",
+            "email": "jsola@roi-up.es"
         }
     ],
     "autoload": {
