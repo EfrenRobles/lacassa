@@ -46,7 +46,7 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
      */
     public function toSql(Connection $connection, BaseGrammar $grammar)
     {
-        $this->addImpliedCommands();
+        $this->addImpliedCommands($grammar);
 
         $statements = [];
         // Each type of command has a corresponding compiler function on the schema
@@ -218,11 +218,12 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
      * Create a new timestamp column on the table.
      *
      * @param  string $column
+     * @param  integer $precision
      * @return \Illuminate\Support\Fluent
      */
-    public function timestamp($column)
+    public function timestamp($column, $precision = 0)
     {
-        return $this->addColumn('timestamp', $column);
+        return $this->addColumn('timestamp', $column, compact('precision'));
     }
 
     /**
