@@ -8,8 +8,13 @@ use Illuminate\Database\Eloquent\Model as BaseModel;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Cubettech\Lacassa\Query\Builder as QueryBuilder;
 use Cassandra\Timestamp;
+use Cassandra\Timeuuid;
 use ReflectionMethod;
 
+/**
+ * Class Model
+ * @package Cubettech\Lacassa\Eloquent
+ */
 abstract class Model extends BaseModel
 {
 
@@ -33,6 +38,17 @@ abstract class Model extends BaseModel
      * @var Relation
      */
     protected $parentRelation;
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if ($model->getKeyType() === 'timeuuid') {
+                $model->{$model->getKeyName()} = new Timeuuid(\time());
+            }
+            return true;
+        });
+    }
 
     /**
      * Custom accessor for the model's id.
@@ -425,7 +441,6 @@ abstract class Model extends BaseModel
      * Create the model in the database.
      *
      * @param  array $attributes
-     * @param  array $options
      *
      * @return Model
      */

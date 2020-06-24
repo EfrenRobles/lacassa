@@ -26,7 +26,7 @@ class Builder extends BaseBuilder
         'order' => [],
         'union' => [],
         'updateCollection' => [],
-        'insertCollection' => []
+        'insertCollection' => [],
     ];
     /**
      * The where constraints for the query.
@@ -141,7 +141,7 @@ class Builder extends BaseBuilder
         '<' => '$lt',
         '<=' => '$lte',
         '>' => '$gt',
-        '>=' => '$gte'
+        '>=' => '$gte',
     ];
 
     /**
@@ -185,13 +185,17 @@ class Builder extends BaseBuilder
      *
      * @param  array $columns
      *
-     * @return Cassandra\Rows
+     * @return Collection
      */
-    public function get($columns = ['*'])
+    public function get($columns = ['*']): Collection
     {
-        if (is_null($this->columns)) {
+        if (null === $this->columns) {
             $this->columns = $columns;
         }
+        foreach ($this->wheres as &$where) {
+            $where['column'] = explode('.', $where['column'])[1] ?? explode('.', $where['column'])[0];
+        }
+        unset($where);
 
         $cql = $this->toCql();
         $cql = $this->bindQuery($cql);
@@ -203,15 +207,17 @@ class Builder extends BaseBuilder
     /**
      * Bind the query with its parameters.
      *
-     * @param  object $cql
+     * @param  string $cql
      *
      * @return $cql
      */
     public function bindQuery($cql)
     {
         foreach ($this->getBindings() as $binding) {
-            $value = "'" . $binding . "'";
-            $cql = preg_replace('/\?/', $value, $cql, 1);
+            if (!is_numeric($binding)) {
+                $binding = "'" . $binding . "'";
+            }
+            $cql = preg_replace('/\?/', $binding, $cql, 1);
         }
 
         return $cql;
@@ -368,7 +374,6 @@ class Builder extends BaseBuilder
      */
     public function insert(array $values = [])
     {
-        $insertCollectionArray = [];
         // Since every insert gets treated like a batch insert, we will make sure the
         // bindings are structured in a way that is convenient when building these
         // inserts statements by verifying these elements are actually an array.
