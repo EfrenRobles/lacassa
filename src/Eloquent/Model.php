@@ -91,7 +91,7 @@ abstract class Model extends BaseModel
      *
      * @return DateTime
      */
-    protected function asDateTime($value)
+    public function asDateTime($value)
     {
         // Convert UTCDateTime instances.
         if ($value instanceof Timestamp) {
@@ -106,7 +106,7 @@ abstract class Model extends BaseModel
      *
      * @return string
      */
-    protected function getDateFormat()
+    public function getDateFormat()
     {
         return $this->dateFormat ?: 'Y-m-d H:i:s';
     }
@@ -164,7 +164,7 @@ abstract class Model extends BaseModel
      *
      * @return mixed
      */
-    protected function getAttributeFromArray($key)
+    public function getAttributeFromArray($key)
     {
         // Support keys in dot notation.
         if (str_contains($key, '.')) {
@@ -240,7 +240,7 @@ abstract class Model extends BaseModel
      *
      * @return bool
      */
-    protected function originalIsNumericallyEquivalent($key)
+    public function originalIsNumericallyEquivalent($key)
     {
         $current = $this->attributes[$key];
         $original = $this->original[$key];
@@ -338,7 +338,7 @@ abstract class Model extends BaseModel
      * @param  array  $values
      * @param  bool   $unique
      */
-    protected function pushAttributeValues($column, array $values, $unique = false)
+    public function pushAttributeValues($column, array $values, $unique = false)
     {
         $current = $this->getAttributeFromArray($column) ?: [];
 
@@ -362,7 +362,7 @@ abstract class Model extends BaseModel
      * @param  string $column
      * @param  array  $values
      */
-    protected function pullAttributeValues($column, array $values)
+    public function pullAttributeValues($column, array $values)
     {
         $current = $this->getAttributeFromArray($column) ?: [];
 
@@ -396,7 +396,7 @@ abstract class Model extends BaseModel
      *
      * @return Builder
      */
-    protected function newBaseQueryBuilder()
+    public function newBaseQueryBuilder()
     {
         $connection = $this->getConnection();
 
