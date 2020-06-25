@@ -16,7 +16,6 @@ class Helper
         return is_string($value) && (bool)preg_match($pIsUuid, $value);
     }
 
-
     public static function isAvoidingQuotes($binding)
     {
         return (

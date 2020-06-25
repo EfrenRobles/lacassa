@@ -2,17 +2,13 @@
 
 namespace Cubettech\Lacassa\Query;
 
-use Closure;
-use DateTime;
 use InvalidArgumentException;
 use Illuminate\Database\Query\Builder as BaseBuilder;
-use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Cubettech\Lacassa\Connection;
 use Cassandra;
 use Cubettech\Lacassa\Helper\Helper;
-
 
 class Builder extends BaseBuilder
 {
@@ -181,7 +177,7 @@ class Builder extends BaseBuilder
      *
      * @return $this
      */
-    public function from($collection)
+    public function from($collection, $as = null)
     {
         return parent::from($collection);
     }
@@ -206,7 +202,7 @@ class Builder extends BaseBuilder
         $cql = $this->toCql();
         $cql = $this->bindQuery($cql);
 
-        if($this->allowFilters){
+        if ($this->allowFilters) {
             $cql .= ' ALLOW FILTERING';
         }
 
@@ -232,7 +228,6 @@ class Builder extends BaseBuilder
 
         return $cql;
     }
-
 
     /**
      * Execute the CQL query.
@@ -320,7 +315,9 @@ class Builder extends BaseBuilder
     {
         //Check if the type is anyone in SET, LIST or MAP. else throw ERROR.
         if (!in_array(strtolower($type), $this->collectionTypes)) {
-            throw new InvalidArgumentException("Invalid binding type: {$type}, Should be any one of " . implode(', ', $this->collectionTypes));
+            throw new InvalidArgumentException(
+                "Invalid binding type: {$type}, Should be any one of " . implode(', ', $this->collectionTypes)
+            );
         }
         // Here we will make some assumptions about the operator. If only 2 values are
         // passed to the method, we will assume that the operator is an equals sign
@@ -366,11 +363,11 @@ class Builder extends BaseBuilder
     {
         $cql = $this->grammar->compileUpdate($this, $values);
         return $this->connection->update(
-                $cql,
-                $this->cleanBindings(
-                    $this->grammar->prepareBindingsForUpdate($this->bindings, $values)
-                )
-            );
+            $cql,
+            $this->cleanBindings(
+                $this->grammar->prepareBindingsForUpdate($this->bindings, $values)
+            )
+        );
     }
 
     /**
@@ -448,17 +445,20 @@ class Builder extends BaseBuilder
         return $result;
     }
 
-    public function allowFiltering($value = true){
+    public function allowFiltering($value = true)
+    {
         $this->allowFilters = $value;
         return $this;
     }
 
-    public function withoutTimestamps($value = true){
+    public function withoutTimestamps($value = true)
+    {
         $this->applyTimestamps = !$value;
         return $this;
     }
 
-    public function applyTimestamps(){
+    public function applyTimestamps()
+    {
         return $this->applyTimestamps;
     }
 }

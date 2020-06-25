@@ -13,7 +13,7 @@
         "lacassa"
     ],
     "require": {
-        "datastax/php-driver": "^1.2"
+
     },
     "authors": [
         {

@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Cubettech\Lacassa\Schema;
 
 use Closure;
@@ -15,8 +15,6 @@ class Builder extends \Illuminate\Database\Schema\Builder
         $this->grammar = $connection->getSchemaGrammar();
     }
 
-
-  
     /**
      * @inheritdoc
      */

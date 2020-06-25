@@ -2,15 +2,13 @@
 
 namespace Cubettech\Lacassa;
 
-use function GuzzleHttp\Psr7\str;
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Database\ConnectionResolverInterface as ConnectionResolverInterface;
-use Cassandra;
 use Cubettech\Lacassa\Helper\Helper;
+use Exception;
 
 class Connection extends BaseConnection implements ConnectionResolverInterface
 {
-
     /**
      * The Cassandra connection handler.
      *
@@ -26,6 +24,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     public function __construct(array $config)
     {
         $this->config = $config;
+
         // Create the connection
         $this->db = $config['keyspace'];
         $this->connection = $this->createConnection($config);
@@ -50,7 +49,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
      * @param string $table
      * @return Query\Builder
      */
-    public function table($table)
+    public function table($table, $as = null)
     {
         return $this->collection($table);
     }
@@ -90,21 +89,25 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
      */
     protected function createConnection(array $config)
     {
-        $cluster   = Cassandra::cluster()
-                     ->withContactPoints($config['host'])
-                     ->withPort((int)$config['port']);
+        $cluster = \Cassandra::cluster()
+            ->withContactPoints($config['host'])
+            ->withPort((int)$config['port']);
 
-        if(!empty($config['authType'])){
-            switch ($config['authType']){
+        if (!empty($config['authType'])) {
+
+            switch ($config['authType']) {
                 case 'userCredentials':
                     if (empty($config['username']) || empty($config['password'])) {
-                        throw new \Exception('You have selected userCredentials auth type but you haven\'t provided username and password, please check your config params');
+                        throw new Exception('You have selected userCredentials auth ' .
+                            'type but you haven\'t provided username and password, please check' .
+                            'your config params'
+                        );
                     }
                     $cluster = $cluster->withCredentials($config['username'], $config['password']);
+
                     break;
             }
         }
-
 
         $cluster = $cluster->build();
         $keyspace  = $config['keyspace'];
@@ -188,12 +191,8 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         }
         $builder = new Query\Builder($this, $this->getPostProcessor());
 
-        //print("\n\n{$query}\n\n");
-
         return $builder->executeCql($query);
     }
-
-
 
     /**
      * Run an CQL statement and get the number of rows affected.
@@ -307,5 +306,4 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         }
         return $result;
     }
-
 }

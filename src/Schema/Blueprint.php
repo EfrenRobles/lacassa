@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Cubettech\Lacassa\Schema;
 
@@ -52,6 +52,7 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
         $this->addImpliedCommands($grammar);
 
         $statements = [];
+
         // Each type of command has a corresponding compiler function on the schema
         // grammar which is used to build the necessary SQL statements to build
         // the blueprint element, so we'll just call that compilers function.

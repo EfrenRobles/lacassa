@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Cubettech\Lacassa\Schema;
 
@@ -16,9 +16,18 @@ class Grammar extends BaseGrammar
       * @var array
       */
     protected $modifiers = [
-       'VirtualAs', 'StoredAs', 'Unsigned', 'Charset', 'Collate', 'Nullable',
-       'Default', 'Increment', 'Comment', 'After', 'First',
-   ];
+        'VirtualAs',
+        'StoredAs',
+        'Unsigned',
+        'Charset',
+        'Collate',
+        'Nullable',
+        'Default',
+        'Increment',
+        'Comment',
+        'After',
+        'First',
+    ];
 
     /**
      * The possible column serials.

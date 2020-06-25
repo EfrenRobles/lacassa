@@ -399,7 +399,6 @@ abstract class Model extends BaseModel
      * Create a new Eloquent query builder for the model.
      *
      * @param  \sonvq\Cassandra\Query\Builder $query
-     *
      * @return \sonvq\Cassandra\Eloquent\Builder|static
      */
     public function newEloquentBuilder($query)
@@ -441,7 +440,6 @@ abstract class Model extends BaseModel
      * Create the model in the database.
      *
      * @param  array $attributes
-     *
      * @return Model
      */
     public static function create(array $attributes = [])
