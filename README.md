@@ -1,6 +1,6 @@
-## **Eloquent Cassandra for Lumen 5.7.x**
+## **Eloquent Cassandra for Lumen 7.2** (BETA)
 
-Cassandra support for Lumen 5.7.x database query builder
+Cassandra support for Lumen 7.2 database query builder
 
 A Query builder with support for Cassandra, using the original Laravel API. This library extends the original Laravel classes, so it uses exactly the same methods.
 
@@ -20,11 +20,13 @@ A Query builder with support for Cassandra, using the original Laravel API. This
 
 ## **Installation**
 
-Make sure you have the DataStax PHP Driver for Apache Cassandra installed. You can find installation instructions at https://github.com/datastax/php-driver
+Make sure you have the DataStax PHP Driver for Apache Cassandra installed in your PHP container or server.
+
+You can find installation instructions at https://github.com/datastax/php-driver
 or 
 https://github.com/datastax/php-driver/blob/master/ext/README.md
 
-*datastax php-driver requires php version 5.6+*
+*datastax php-driver requires php version 5.6+ but it is possible to install it on php 7.3 using repository PHP-232*
 
 Installation using composer:
 
@@ -36,33 +38,31 @@ Add the line below in the "Register Service Provider" of bootstrap/app.php file:
 
 Include to .env file the filled data below:
 
-	DB_CONNECTION=cassandra
-	DB_HOST=
-	DB_PORT=9042
-	DB_KEYSPACE=mykeyspace
-	DB_USERNAME=
-	DB_PASSWORD=
-	DB_AUTH_TYPE= empty or userCredentials
+    DB_CONNECTION=cassandra
+    DB_HOST=your-docker-container-name
+    DB_PORT=9042
+    DB_DATABASE=your-keyspace-name
+    DB_USERNAME=cassandra-user-name (no tested yet)
+    DB_PASSWORD=cassandra-password (no tested yet)
+    BB_AUTH_TYPE= empty or userCredentials (no tested yet)
+
 
 ## **Configuration**
-
-Change your default database connection name in config/database.php:
-
-    'default' => env('DB_CONNECTION', 'cassandra'),
 
 And add a new cassandra connection:
 
     'cassandra' => [
-    	    'driver' => 'Cassandra',
-    	    'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', 9042),
-            'keyspace' => env('DB_DATABASE', 'cassandra_db'),
-            'username' => env('DB_USERNAME', ''),
-            'password' => env('DB_PASSWORD', ''),
-            'authType' => env('DB_AUTH_TYPE', ''),
-     ],
+        'driver' => 'cassandra',
+        'host' => env('DB_HOST', 'localhost'),
+        'port' => env('DB_PORT', 9042),
+        'keyspace' => env('DB_DATABASE', 'cassandra_db'),
+        'username' => env('DB_USERNAME', ''),
+        'password' => env('DB_PASSWORD', ''),
+        'authType' => env('DB_AUTH_TYPE', ''),
+    ],
 
-### **Auth**
+
+### **Auth** (No tested yet)
 
 You can use Laravel's native Auth functionality for cassandra, make sure your config/auth.php looks like 
 
@@ -77,7 +77,7 @@ You can use Laravel's native Auth functionality for cassandra, make sure your co
         ],
             ],
 
-## **Schema**
+## **Schema**  (No tested yet)
 
 Preparing the schema in Cubettech\Lacassa\PrepareSchema
 
@@ -100,7 +100,7 @@ DROP table
 
         Schema::drop('users');
 
-# **CQL data types supported**
+# **CQL data types supported**  (No tested yet)
 
 text('a')
 
@@ -148,7 +148,8 @@ ascii('u')
 
 primary(['a', 'b'])
 
-**Query Builder**
+
+**Query Builder** (ok)
 
 The database driver plugs right into the original query builder. When using cassandra connections, you will be able to build fluent queries to perform database operations.
 
@@ -168,13 +169,13 @@ If you did not change your default database connection, you will need to specify
 
     $emp = DB::table('emp')->all();
 
-**Indexing columns**
+**Indexing columns**  (No tested yet)
 
 CREATE INDEX creates a new index on the given table for the named column.
 
     DB::table('users')->index(['name']);
 
-**Selecting columns**
+**Selecting columns**  (ok)
 
     $emp = DB::table('emp')->where('emp_no', '>', 50)->select('emp_name', 'emp_no')->get();
 
@@ -254,7 +255,7 @@ The CQL expressions can be injected directly into the query.
 
 Inserting, updating and deleting records works just like the original QB.
 
-**Insert**
+**Insert**  (ok)
 
     DB::table('emp')->insert(['emp_id' => 11, 'emp_city' => '{"kochi", "tvm", "kollam"}', 'emp_name' => 'Christy', 'emp_phone' => 12345676890, 'emp_sal' => 500]);
 
@@ -290,7 +291,7 @@ Value can be associative array for map type and array of string/number for list 
 
     DB::table('users')->where('id', 1)->updateCollection('map', 'friends', '-', ['John'])->update();
 
-**Deleting**
+**Deleting**  (ok at rows)
 
 To delete a model, simply call the delete method on the instance. We can delete the rows in a table by using deleteRow method:
 
@@ -300,7 +301,7 @@ We can also perform delete by the column in a table using deleteColumn method:
 
     $emp = DB::table('emp')->where('emp_id', 3)->deleteColumn();
     
-**Model**
+**Model**  (No tested yet)
 
 Model 請extends '''use Cubettech\Lacassa\Eloquent\Model;''' 這個Model，然後$connection選擇Cassandra的connection如即可
 例如：config/database.php
