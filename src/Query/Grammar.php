@@ -115,13 +115,6 @@ class Grammar extends BaseGrammar
             $parameters = $parameters ? $parameters . ', ' . $collectionParam : $collectionParam;
         }
 
-        // Adding auto id column in insert queries (it is not binded)
-        if (!empty($parameters)) {
-            //$columns .= ", id, createddate";
-            $columns .= ", createddate";
-            //$parameters .= ", now(), toTimestamp(now())";
-            $parameters .= ", toTimestamp(now())";
-        }
 
         if($query->applyTimestamps()){
             $this->performTimestamps(self::INSERT_ACTION, $columns, $parameters);
