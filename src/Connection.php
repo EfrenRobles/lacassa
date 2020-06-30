@@ -1,10 +1,13 @@
 <?php
+
 namespace Cubettech\Lacassa;
 
 use Illuminate\Database\Connection as BaseConnection;
-use Cassandra;
+use Illuminate\Database\ConnectionResolverInterface as ConnectionResolverInterface;
+use Cubettech\Lacassa\Helper\Helper;
+use Exception;
 
-class Connection extends BaseConnection
+class Connection extends BaseConnection implements ConnectionResolverInterface
 {
     /**
      * The Cassandra connection handler.
@@ -21,6 +24,7 @@ class Connection extends BaseConnection
     public function __construct(array $config)
     {
         $this->config = $config;
+
         // Create the connection
         $this->db = $config['keyspace'];
         $this->connection = $this->createConnection($config);
@@ -30,7 +34,7 @@ class Connection extends BaseConnection
     /**
      * Begin a fluent query against a database collection.
      *
-     * @param  string $collection
+     * @param string $collection
      * @return Query\Builder
      */
     public function collection($collection)
@@ -42,10 +46,10 @@ class Connection extends BaseConnection
     /**
      * Begin a fluent query against a database collection.
      *
-     * @param  string $table
+     * @param string $table
      * @return Query\Builder
      */
-    public function table($table)
+    public function table($table, $as = null)
     {
         return $this->collection($table);
     }
@@ -57,6 +61,7 @@ class Connection extends BaseConnection
     {
         return new Schema\Builder($this);
     }
+
     /**
      * [getSchemaGrammar returns the connection grammer]
      * @return [Schema\Grammar] [description]
@@ -79,14 +84,36 @@ class Connection extends BaseConnection
     /**
      * Create a new Cassandra connection.
      *
-     * @param  array $config
+     * @param array $config
      * @return \Cassandra\DefaultSession
      */
     protected function createConnection(array $config)
     {
-        $cluster   = Cassandra::cluster()->build();
+        $cluster = \Cassandra::cluster()
+            ->withContactPoints($config['host'])
+            ->withPort((int)$config['port']);
+
+        if (!empty($config['authType'])) {
+
+            switch ($config['authType']) {
+                case 'userCredentials':
+                    if (empty($config['username']) || empty($config['password'])) {
+                        throw new Exception('You have selected userCredentials auth ' .
+                            'type but you haven\'t provided username and password, please check' .
+                            'your config params'
+                        );
+                    }
+                    $cluster = $cluster->withCredentials($config['username'], $config['password']);
+
+                    break;
+            }
+        }
+
+        $cluster = $cluster->build();
         $keyspace  = $config['keyspace'];
+
         $connection   = $cluster->connect($keyspace);
+
         return $connection;
     }
 
@@ -138,51 +165,64 @@ class Connection extends BaseConnection
         return new Schema\Grammar();
     }
 
+
     /**
      * Execute an CQL statement and return the boolean result.
      *
-     * @param  string $query
-     * @param  array  $bindings
+     * @param string $query
+     * @param array $bindings
      * @return bool
      */
     public function statement($query, $bindings = [])
     {
-        foreach($bindings as $binding)
-          {
-            $value = 'string' == strtolower(gettype($binding)) ? "'" . $binding . "'" : $binding;
+
+
+        foreach ($bindings as $binding) {
+
+            if (is_bool($binding)) {
+                $value = $binding ? "true" : "false";
+            } elseif (is_array($binding)) {
+                $value = $this->elem2UDT($binding);
+            } else {
+                $value = Helper::isAvoidingQuotes($binding)  ? $binding : "'" . $binding . "'";
+            }
+
             $query = preg_replace('/\?/', $value, $query, 1);
-          }
-          $builder = new Query\Builder($this, $this->getPostProcessor());
-          return $builder->executeCql($query);
+        }
+        $builder = new Query\Builder($this, $this->getPostProcessor());
+
+        return $builder->executeCql($query);
     }
 
     /**
      * Run an CQL statement and get the number of rows affected.
      *
-     * @param  string $query
-     * @param  array  $bindings
+     * @param string $query
+     * @param array $bindings
      * @return int
      */
     public function affectingStatement($query, $bindings = [])
     {
-            // For update or delete statements, we want to get the number of rows affected
-            // by the statement and return that back to the developer. We'll first need
-            // to execute the statement and then we'll use PDO to fetch the affected.
-        foreach($bindings as $binding)
-            {
-            $value = $value = 'string' == strtolower(gettype($binding)) ? "'" . $binding . "'" : $binding;
+        // For update or delete statements, we want to get the number of rows affected
+        // by the statement and return that back to the developer. We'll first need
+        // to execute the statement and then we'll use PDO to fetch the affected.
+
+        foreach ($bindings as $binding) {
+            $value = Helper::isAvoidingQuotes($binding)  ? $binding : "'" . $binding . "'";
             $query = preg_replace('/\?/', $value, $query, 1);
         }
-            $builder = new Query\Builder($this, $this->getPostProcessor());
 
-            return $builder->executeCql($query);
+        $builder = new Query\Builder($this, $this->getPostProcessor());
+
+        return $builder->executeCql($query);
     }
+
 
     /**
      * Execute an CQL statement and return the boolean result.
      *
-     * @param  string $query
-     * @param  array  $bindings
+     * @param string $query
+     * @param array $bindings
      * @return bool
      */
     public function raw($query)
@@ -195,12 +235,75 @@ class Connection extends BaseConnection
     /**
      * Dynamically pass methods to the connection.
      *
-     * @param  string $method
-     * @param  array  $parameters
+     * @param string $method
+     * @param array $parameters
      * @return mixed
      */
     public function __call($method, $parameters)
     {
         return call_user_func_array([$this->connection, $method], $parameters);
+    }
+
+    // Interface methods implementation (for Lumen 5.7.* compatibility)
+
+    /**
+     * Get a database connection instance.
+     *
+     * @param string $name
+     * @return \Illuminate\Database\ConnectionInterface
+     */
+    public function connection($name = null)
+    {
+    }
+
+    /**
+     * Get the default connection name.
+     *
+     * @return string
+     */
+    public function getDefaultConnection()
+    {
+    }
+
+    /**
+     * Set the default connection name.
+     *
+     * @param string $name
+     * @return void
+     */
+    public function setDefaultConnection($name)
+    {
+    }
+
+
+    // PRIVATE METHODS
+
+
+    /**
+     * Transform element to UDT update/insert value format
+     *
+     * @param $elem
+     * @return string
+     */
+    private function elem2UDT($elem)
+    {
+        $result = "";
+        if (is_array($elem)) {
+            $result .= '{';
+            $each_result = "";
+            foreach ($elem as $key => $value) {
+                if (!is_array($value)) {
+                    $each_result .= "{$key}: '$value',";
+                } else {
+                    $each_result .= $this->elem2UDT($value) . ",";
+                }
+            }
+            if (substr($each_result, strlen($each_result) - 1) == ',') {
+                $each_result = substr($each_result, 0, strlen($each_result) - 1);
+            }
+            $result .= $each_result;
+            $result .= '}';
+        }
+        return $result;
     }
 }

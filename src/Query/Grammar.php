@@ -1,24 +1,30 @@
-<?php namespace Cubettech\Lacassa\Query;
+<?php
+
+namespace Cubettech\Lacassa\Query;
 
 use Illuminate\Database\Query\Grammars\Grammar as BaseGrammar;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 
 class Grammar extends BaseGrammar
 {
+
+    private const INSERT_ACTION = 'insert';
+    private const UPDATE_ACTION = 'update';
+    private const DELETE_ACTION = 'delete';
+
     /**
      * [compileSelect compiles the cql select]
      * @param  BaseBuilder $query [description]
-     * @return [type]             [description]
+     * @return string [type]             [description]
      */
-    public function compileSelect(BaseBuilder $query)
+    public function compileSelect(BaseBuilder $query): string
     {
-
         // If the query does not have any columns set, we'll set the columns to the
         // * character to just get all of the columns from the database. Then we
         // can build the query and concatenate all the pieces together as one.
         $original = $query->columns;
 
-        if (is_null($query->columns)) {
+        if (!is_array($query->columns)) {
             $query->columns = ['*'];
         }
 
@@ -30,9 +36,43 @@ class Grammar extends BaseGrammar
                 $this->compileComponents($query)
             )
         );
+
         $query->columns = $original;
 
         return $cql;
+    }
+
+    /**
+     * Compile the components necessary for a select clause.
+     *
+     * @param  \Illuminate\Database\Query\Builder $query
+     * @return array
+     */
+    protected function compileComponents(BaseBuilder $query)
+    {
+        $sql = [];
+        foreach ($query->wheres as $key => $where) {
+            if ($where['type'] === 'Nested') {
+                $query->wheres = $where['query']->wheres;
+            }
+
+            // Cassandra doesnt support NOT
+            if ($where['type'] === 'NotNull') {
+                unset($query->wheres[$key]);
+            }
+        }
+        foreach ($this->selectComponents as $component) {
+            // To compile the query, we'll spin through each component of the query and
+            // see if that component exists. If it does we'll just call the compiler
+            // function for the component which is responsible for making the SQL.
+            if (null !== $query->$component) {
+                $method = 'compile' . ucfirst($component);
+
+                $sql[$component] = $this->$method($query, $query->$component);
+            }
+        }
+
+        return $sql;
     }
 
     /**
@@ -48,19 +88,19 @@ class Grammar extends BaseGrammar
         // simply makes creating the CQL easier for us since we can utilize the same
         // basic routine regardless of an amount of records given to us to insert.
         $table = $this->wrapTable($query->from);
-        if (! is_array(reset($values))) {
+        if (!is_array(reset($values))) {
             $values = [$values];
         }
-				$insertCollections = collect($query->bindings['insertCollection']);
+        $insertCollections = collect($query->bindings['insertCollection']);
 
-				$insertCollectionArray = $insertCollections->mapWithKeys(function($collectionItem){
-        return [$collectionItem['column'] => $this->compileCollectionValues($collectionItem['type'], $collectionItem['value'])];
-				})->all();
+        $insertCollectionArray = $insertCollections->mapWithKeys(function ($collectionItem) {
+            return [$collectionItem['column'] => $this->compileCollectionValues($collectionItem['type'], $collectionItem['value'])];
+        })->all();
 
         $columns = $this->columnize(array_keys(reset($values)));
         $collectionColumns = $this->columnize(array_keys($insertCollectionArray));
-        if($collectionColumns){
-          $columns = $columns ? $columns .', '. $collectionColumns:$collectionColumns;
+        if ($collectionColumns) {
+            $columns = $columns ? $columns . ', ' . $collectionColumns : $collectionColumns;
         }
         $collectionParam = $this->buildInsertCollectionParam($insertCollections);
         // We need to build a list of parameter place-holders of values that are bound
@@ -71,8 +111,13 @@ class Grammar extends BaseGrammar
                 return $this->parameterize($record);
             }
         )->implode(', ');
-        if($collectionParam){
-          $parameters = $parameters ? $parameters .', '. $collectionParam : $collectionParam;
+        if ($collectionParam) {
+            $parameters = $parameters ? $parameters . ', ' . $collectionParam : $collectionParam;
+        }
+
+
+        if($query->applyTimestamps()){
+            $this->performTimestamps(self::INSERT_ACTION, $columns, $parameters);
         }
 
         return "insert into $table ($columns) values ($parameters)";
@@ -83,10 +128,11 @@ class Grammar extends BaseGrammar
      * @param  [type] $collection [description]
      * @return [type]             [description]
      */
-    public function buildInsertCollectionParam($collection){
-      return $collection->map(function($collectionItem){
-        return $this->compileCollectionValues($collectionItem['type'], $collectionItem['value']);
-      })->implode(', ');
+    public function buildInsertCollectionParam($collection)
+    {
+        return $collection->map(function ($collectionItem) {
+            return $this->compileCollectionValues($collectionItem['type'], $collectionItem['value']);
+        })->implode(', ');
     }
 
     /**
@@ -113,19 +159,19 @@ class Grammar extends BaseGrammar
     public function compileDelete(BaseBuilder $query)
     {
         $delColumns = "";
-        if(isset($query->delParams)) {
+        if (isset($query->delParams)) {
             $delColumns = implode(", ", $query->delParams);
         }
 
         $wheres = is_array($query->wheres) ? $this->compileWheres($query) : '';
-        return trim("delete ".$delColumns." from {$this->wrapTable($query->from)} $wheres");
+        return trim("delete " . $delColumns . " from {$this->wrapTable($query->from)} $wheres");
     }
 
     /**
      * Compile an update statement into SQL.
      *
      * @param  \Illuminate\Database\Query\Builder $query
-     * @param  array                              $values
+     * @param  array $values
      * @return string
      */
     public function compileUpdate(BaseBuilder $query, $values)
@@ -136,7 +182,7 @@ class Grammar extends BaseGrammar
         // the values in the list of bindings so we can make the sets statements.
         $columns = collect($values)->map(
             function ($value, $key) {
-                return $this->wrap($key).' = '.$this->parameter($value);
+                return $this->wrap($key) . ' = ' . $this->parameter($value);
             }
         )->implode(', ');
 
@@ -145,9 +191,12 @@ class Grammar extends BaseGrammar
         // intended records are updated by the SQL statements we generate to run.
         $wheres = $this->compileWheres($query);
         $upateCollections = $this->compileUpdateCollections($query);
-        if($upateCollections)
-        {
-          $upateCollections = $columns ? ', '.$upateCollections : $upateCollections;
+        if ($upateCollections) {
+            $upateCollections = $columns ? ', ' . $upateCollections : $upateCollections;
+        }
+
+        if ($query->applyTimestamps()) {
+            $this->performTimestamps(self::UPDATE_ACTION, $columns, $upateCollections);
         }
 
         return trim("update {$table} set $columns $upateCollections $wheres");
@@ -164,10 +213,18 @@ class Grammar extends BaseGrammar
 
         $updateCollectionCql = $updateCollections->map(
             function ($collection, $key) {
-                if($collection['operation']) {
-                    return $collection['column'] . '=' . $collection['column'] . $collection['operation'] . $this->compileCollectionValues($collection['type'], $collection['value']);
-                }else{
-                    return $collection['column'] . '=' . $this->compileCollectionValues($collection['type'], $collection['value']);
+                if ($collection['operation']) {
+                    return $collection['column'] .
+                        '=' .
+                        $collection['column'] .
+                        $collection['operation'] .
+                        $this->compileCollectionValues($collection['type'], $collection['value']
+                    );
+                } else {
+                    return $collection['column'] . '=' . $this->compileCollectionValues(
+                        $collection['type'],
+                        $collection['value']
+                    );
                 }
             }
         )->implode(', ');
@@ -183,21 +240,18 @@ class Grammar extends BaseGrammar
      */
     public function compileCollectionValues($type, $value)
     {
-        if(is_array($value)) {
+        if (is_array($value)) {
 
-            if('set' == $type) {
-                $collection = "{".$this->buildCollectionString($type, $value)."}";
-            }
-            elseif ('list' == $type) {
-                $collection = "[".$this->buildCollectionString($type, $value)."]";
-            }
-            elseif ('map' == $type) {
-                $collection = "{".$this->buildCollectionString($type, $value)."}";
+            if ('set' == $type) {
+                $collection = "{" . $this->buildCollectionString($type, $value) . "}";
+            } elseif ('list' == $type) {
+                $collection = "[" . $this->buildCollectionString($type, $value) . "]";
+            } elseif ('map' == $type) {
+                $collection = "{" . $this->buildCollectionString($type, $value) . "}";
             }
 
             return $collection;
         }
-
     }
 
     /**
@@ -209,32 +263,29 @@ class Grammar extends BaseGrammar
     public function buildCollectionString($type, $value)
     {
         $isAssociative = false;
-        if(count(array_filter(array_keys($value), 'is_string')) > 0) {
+        if (count(array_filter(array_keys($value), 'is_string')) > 0) {
             $isAssociative = true;
         }
-        if(is_array($value)) {
-            if('set' == $type || 'list' == $type) {
+        if (is_array($value)) {
+            if ('set' == $type || 'list' == $type) {
                 $collection = collect($value)->map(
                     function ($item, $key) {
                         return 'string' == strtolower(gettype($item)) ? "'" . $item . "'" : $item;
                     }
                 )->implode(', ');
-            }
-            elseif('map' == $type) {
+            } elseif ('map' == $type) {
                 $collection = collect($value)->map(
-                    function ($item, $key) use ($isAssociative){
-                        if($isAssociative === true) {
+                    function ($item, $key) use ($isAssociative) {
+                        if ($isAssociative === true) {
                             $key = 'string' == strtolower(gettype($key)) ? "'" . $key . "'" : $key;
                             $item = 'string' == strtolower(gettype($item)) ? "'" . $item . "'" : $item;
-                            return   $key . ':'. $item;
-                        }else{
-                            return is_numeric($item) ? $item : "'".$item."'";
+                            return $key . ':' . $item;
+                        } else {
+                            return is_numeric($item) ? $item : "'" . $item . "'";
                         }
-
                     }
                 )->implode(', ');
             }
-
         }
         return $collection;
     }
@@ -247,9 +298,32 @@ class Grammar extends BaseGrammar
      */
     public function compileIndex($query, $columns)
     {
-      $table = $this->wrapTable($query->from);
-      $value = implode(", ",$columns);
-      return "CREATE INDEX IF NOT EXISTS ON ". $table ."(".  $value .")";
+        $table = $this->wrapTable($query->from);
+        $value = implode(", ", $columns);
+        return "CREATE INDEX IF NOT EXISTS ON " . $table . "(" . $value . ")";
     }
 
+    private function performTimestamps($action, &$columns, &$parameters) {
+        $createdAt = env('CASSANDRA_INSERT_TIMESTAMP_FIELD', 'created_at');
+        $updatedAt = env('CASSANDRA_UPDATE_TIMESTAMP_FIELD', 'updated_at');
+        $deletedAt = env('CASSANDRA_DELETE_TIMESTAMP_FIELD', 'deleted_at');
+
+
+        switch ($action) {
+            case self::INSERT_ACTION:
+                if (!empty($parameters)) {
+                    $columns .= ", $createdAt, $updatedAt";
+                    $parameters .= ", toTimestamp(now()), toTimestamp(now())";
+                }
+                break;
+
+            case self::UPDATE_ACTION:
+                $columns .= ", $updatedAt = toTimestamp(now())";
+                break;
+
+            case self::DELETE_ACTION:
+                $columns .= ", $deletedAt = toTimestamp(now())";
+                break;
+        }
+    }
 }
