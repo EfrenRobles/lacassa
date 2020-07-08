@@ -93,20 +93,14 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
             ->withContactPoints($config['host'])
             ->withPort((int)$config['port']);
 
-        if (!empty($config['authType'])) {
-
-            switch ($config['authType']) {
-                case 'userCredentials':
-                    if (empty($config['username']) || empty($config['password'])) {
-                        throw new Exception('You have selected userCredentials auth ' .
-                            'type but you haven\'t provided username and password, please check' .
-                            'your config params'
-                        );
-                    }
-                    $cluster = $cluster->withCredentials($config['username'], $config['password']);
-
-                    break;
+        if (!empty($config['authType']) && $config['authType'] == 'userCredentials') {
+            if (empty($config['username']) || empty($config['password'])) {
+                throw new Exception(
+                    'You have selected userCredentials auth type but you haven\'t
+                    provided username and password, please check your config params'
+                );
             }
+            $cluster = $cluster->withCredentials($config['username'], $config['password']);
         }
 
         $cluster = $cluster->build();
@@ -254,6 +248,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
      */
     public function connection($name = null)
     {
+        return $this;
     }
 
     /**
@@ -263,6 +258,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
      */
     public function getDefaultConnection()
     {
+        return $this->connection;
     }
 
     /**

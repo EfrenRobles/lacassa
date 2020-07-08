@@ -30,6 +30,16 @@ class Builder extends EloquentBuilder
     ];
 
     /**
+     * Get the database connection name.
+     *
+     * @return string|null
+     */
+    public function getName()
+    {
+        return 'Cassandra';
+    }
+
+    /**
      * Update a record in the database.
      *
      * @param  array  $values
@@ -85,7 +95,8 @@ class Builder extends EloquentBuilder
             return $this->model->getKey();
         }
 
-        return parent::insert($values, $sequence);
+        // return parent::insert($values, $sequence);
+        return parent::insert($values);
     }
 
     /**
@@ -232,6 +243,7 @@ class Builder extends EloquentBuilder
             $results = iterator_to_array($results, false);
             return $this->model->hydrate($results);
         } // The result is a single object.
+
         elseif (is_array($results) and array_key_exists('_id', $results)) {
             return $this->model->newFromBuilder((array) $results);
         }
