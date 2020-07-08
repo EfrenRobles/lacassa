@@ -1,7 +1,7 @@
 {
-    "name": "Cubettech/lacassa",
+    "name": "cubettech/lacassa",
     "type": "library",
-    "description": "Cassandra support for Lumen 5.7.x database query builder",
+    "description": "Cassandra support for Lumen 7.x database query builder",
     "license": "MIT",
     "keywords": [
         "cassandra",
