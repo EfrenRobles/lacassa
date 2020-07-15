@@ -6,27 +6,17 @@ use Illuminate\Support\ServiceProvider;
 
 class CassandraServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap the application services.
-     *
-     * @return void
-     */
-    public function boot()
+    /** Bootstrap the application services. */
+    public function boot() : void
     {
         //require __DIR__ . '/../vendor/autoload.php';
     }
 
-    /**
-     * Register the application services.
-     *
-     * @return void
-     */
-    public function register()
+    /** Register the application services, add database driver. */
+    public function register() : void
     {
-        // Add database driver.
         $this->app->singleton('db', function ($app) {
-            $config = $app->make('config')["database.connections.cassandra"];
-            return new Connection($config);
+            return new Connection($app);
         });
     }
 }

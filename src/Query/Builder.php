@@ -191,12 +191,14 @@ class Builder extends BaseBuilder
      */
     public function get($columns = ['*']): Collection
     {
-        if (null === $this->columns) {
+        if ($this->columns === null) {
             $this->columns = $columns;
         }
+
         foreach ($this->wheres as &$where) {
             $where['column'] = explode('.', $where['column'])[1] ?? explode('.', $where['column'])[0];
         }
+
         unset($where);
 
         $cql = $this->toCql();
@@ -206,9 +208,7 @@ class Builder extends BaseBuilder
             $cql .= ' ALLOW FILTERING';
         }
 
-        $result = $this->executeCql($cql);
-
-        return $result;
+        return $this->executeCql($cql);
     }
 
     /**
@@ -236,8 +236,9 @@ class Builder extends BaseBuilder
      *
      * @return Collection
      */
-    public function executeCql($cql)
+    public function executeCql($cql) : Collection
     {
+        dd($cql);
         $statement = new Cassandra\SimpleStatement($cql);
         $future = $this->connection->getCassandraConnection()->executeAsync($statement);
         $result = $future->get();

@@ -2,10 +2,14 @@
 
 namespace Cubettech\Lacassa;
 
+use Cassandra\DefaultSession;
+use Exception;
+use Laravel\Lumen\Application;
+use Cubettech\Lacassa\Helper\Helper;
+use Cubettech\Lacassa\Query\Builder;
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Database\ConnectionResolverInterface as ConnectionResolverInterface;
-use Cubettech\Lacassa\Helper\Helper;
-use Exception;
+use Illuminate\Support\Collection;
 
 class Connection extends BaseConnection implements ConnectionResolverInterface
 {
@@ -16,14 +20,11 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
      */
     protected $connection;
 
-    /**
-     * Create a new database connection instance.
-     *
-     * @param array $config
-     */
-    public function __construct(array $config)
+    /** Create a new database connection instance. */
+    public function __construct(Application $app)
     {
-        $this->config = $config;
+
+        $config = $this->validateConfig($app);
 
         // Create the connection
         $this->db = $config['keyspace'];
@@ -31,25 +32,15 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         $this->useDefaultPostProcessor();
     }
 
-    /**
-     * Begin a fluent query against a database collection.
-     *
-     * @param string $collection
-     * @return Query\Builder
-     */
-    public function collection($collection)
+    /** Begin a fluent query against a database collection. */
+    public function collection(string $collection) : Builder
     {
         $query = new Query\Builder($this);
         return $query->from($collection);
     }
 
-    /**
-     * Begin a fluent query against a database collection.
-     *
-     * @param string $table
-     * @return Query\Builder
-     */
-    public function table($table, $as = null)
+    /** Begin a fluent query against a database collection. */
+    public function table($table, $as = null) : Builder
     {
         return $this->collection($table);
     }
@@ -71,23 +62,14 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         return new Schema\Grammar;
     }
 
-    /**
-     * return Cassandra object.
-     *
-     * @return \Cassandra\DefaultSession
-     */
-    public function getCassandraConnection()
+    /** return Cassandra object. */
+    public function getCassandraConnection() : DefaultSession
     {
         return $this->connection;
     }
 
-    /**
-     * Create a new Cassandra connection.
-     *
-     * @param array $config
-     * @return \Cassandra\DefaultSession
-     */
-    protected function createConnection(array $config)
+    /** Create a new Cassandra connection. */
+    protected function createConnection(array $config) : DefaultSession
     {
         $cluster = \Cassandra::cluster()
             ->withContactPoints($config['host'])
@@ -96,19 +78,16 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         if (!empty($config['authType']) && $config['authType'] == 'userCredentials') {
             if (empty($config['username']) || empty($config['password'])) {
                 throw new Exception(
-                    'You have selected userCredentials auth type but you haven\'t
-                    provided username and password, please check your config params'
+                    "You have selected userCredentials auth type but you have not \n" .
+                    "provided username and password, please check your config params"
                 );
             }
+
             $cluster = $cluster->withCredentials($config['username'], $config['password']);
         }
 
-        $cluster = $cluster->build();
-        $keyspace  = $config['keyspace'];
-
-        $connection   = $cluster->connect($keyspace);
-
-        return $connection;
+        return $cluster->build()
+            ->connect($config['keyspace']);
     }
 
     /**
@@ -138,7 +117,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     /**
      * @inheritdoc
      */
-    protected function getDefaultPostProcessor()
+    protected function getDefaultPostProcessor() : Query\Processor
     {
         return new Query\Processor();
     }
@@ -172,7 +151,6 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
 
 
         foreach ($bindings as $binding) {
-
             if (is_bool($binding)) {
                 $value = $binding ? "true" : "false";
             } elseif (is_array($binding)) {
@@ -212,18 +190,13 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     }
 
 
-    /**
-     * Execute an CQL statement and return the boolean result.
-     *
+    /** Execute an CQL statement and return the boolean result.
      * @param string $query
-     * @param array $bindings
-     * @return bool
      */
-    public function raw($query)
+    public function raw($query): Collection
     {
         $builder = new Query\Builder($this, $this->getPostProcessor());
-        $result = $builder->executeCql($query);
-        return $result;
+        return $builder->executeCql($query);
     }
 
     /**
@@ -271,9 +244,7 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     {
     }
 
-
     // PRIVATE METHODS
-
 
     /**
      * Transform element to UDT update/insert value format
@@ -301,5 +272,29 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
             $result .= '}';
         }
         return $result;
+    }
+
+    /** Check if the configuration cassandra is set in the database.php file */
+    private function validateConfig(Application $app) : array
+    {
+        if (isset($app->make('config')["database.connections.cassandra"])) {
+            return $app->make('config')["database.connections.cassandra"];
+        }
+
+        throw new Exception(
+            "This seems that you missed to add cassandra cofinguration in your database.php file.\n" .
+            "Please add the next configuration
+
+            'cassandra' => [
+                'driver' => 'cassandra',
+                'host' => env('DB_HOST', 'localhost'),
+                'port' => env('DB_PORT', 9042),
+                'keyspace' => env('DB_DATABASE', 'cassandra_db'),
+                'username' => env('DB_USERNAME', ''),
+                'password' => env('DB_PASSWORD', ''),
+                'authType' => env('DB_AUTH_TYPE', 'userCredentials'),
+            ],",
+            1
+        );
     }
 }

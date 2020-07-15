@@ -43,7 +43,7 @@ A Query builder with support for Cassandra, using the original Laravel API. This
 
 ## **Configuration**
 
-    And add a new cassandra connection:
+    And add a new cassandra connection in your config/database.php:
 
         'cassandra' => [
             'driver' => 'cassandra',
@@ -138,7 +138,7 @@ A Query builder with support for Cassandra, using the original Laravel API. This
         $emp = DB::connection('cassandra')->table('emp')->get();
 
 ** Models ** (beta)
-    To use models on casandra is mandatory enable fasaces and eloquent first in the bootstrap/app.php
+    To use models on casandra is mandatory enable Facades and Eloquent first in the bootstrap/app.php
     
     $app->withFacades();
     $app->withEloquent();

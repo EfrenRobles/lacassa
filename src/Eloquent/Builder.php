@@ -14,7 +14,7 @@ class Builder extends EloquentBuilder
      * @var array
      */
     protected $passthru = [
-        'toSql',
+        'toCql',
         'lists',
         'insert',
         'insertGetId',
@@ -29,14 +29,10 @@ class Builder extends EloquentBuilder
         'pull',
     ];
 
-    /**
-     * Get the database connection name.
-     *
-     * @return string|null
-     */
-    public function getName()
+    /** Get the database connection name. */
+    public function getName() : void
     {
-        return 'Cassandra';
+        // Needed by seeder
     }
 
     /**
@@ -95,8 +91,7 @@ class Builder extends EloquentBuilder
             return $this->model->getKey();
         }
 
-        // return parent::insert($values, $sequence);
-        return parent::insert($values);
+        return parent::insert($values, $sequence);
     }
 
     /**
