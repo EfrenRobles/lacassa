@@ -3,12 +3,12 @@
 namespace Cubettech\Lacassa\Eloquent;
 
 use Carbon\Carbon;
+use Cassandra\Timestamp;
+use Cassandra\Timeuuid;
+use Cubettech\Lacassa\Query\Builder as QueryBuilder;
 use DateTime;
 use Illuminate\Database\Eloquent\Model as BaseModel;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Cubettech\Lacassa\Query\Builder as QueryBuilder;
-use Cassandra\Timestamp;
-use Cassandra\Timeuuid;
 use ReflectionMethod;
 
 /**
@@ -17,7 +17,6 @@ use ReflectionMethod;
  */
 abstract class Model extends BaseModel
 {
-
     /**
      * The collection associated with the model.
      *
@@ -39,15 +38,22 @@ abstract class Model extends BaseModel
      */
     protected $parentRelation;
 
-    protected static function boot()
+    /**
+     * Handle dynamic method calls into the method.
+     *
+     * @param  string $method
+     * @param  array  $parameters
+     *
+     * @return mixed
+     */
+    public function __call($method, $parameters)
     {
-        parent::boot();
-        static::creating(function ($model) {
-            if ($model->getKeyType() === 'timeuuid') {
-                $model->{$model->getKeyName()} = new Timeuuid(\time());
-            }
-            return true;
-        });
+        // Unset method
+        if ($method == 'unset') {
+            return call_user_func_array([$this, 'drop'], $parameters);
+        }
+
+        return parent::__call($method, $parameters);
     }
 
     /**
@@ -232,7 +238,7 @@ abstract class Model extends BaseModel
         // Convert dot-notation dates.
         foreach ($this->getDates() as $key) {
             if (str_contains($key, '.') and array_has($attributes, $key)) {
-                array_set($attributes, $key, (string)$this->asDateTime(array_get($attributes, $key)));
+                array_set($attributes, $key, (string) $this->asDateTime(array_get($attributes, $key)));
             }
         }
 
@@ -419,24 +425,6 @@ abstract class Model extends BaseModel
     }
 
     /**
-     * Handle dynamic method calls into the method.
-     *
-     * @param  string $method
-     * @param  array  $parameters
-     *
-     * @return mixed
-     */
-    public function __call($method, $parameters)
-    {
-        // Unset method
-        if ($method == 'unset') {
-            return call_user_func_array([$this, 'drop'], $parameters);
-        }
-
-        return parent::__call($method, $parameters);
-    }
-
-    /**
      * Create the model in the database.
      *
      * @param  array $attributes
@@ -474,5 +462,17 @@ abstract class Model extends BaseModel
     public function getParentRelation()
     {
         return $this->parentRelation;
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if ($model->getKeyType() === 'timeuuid') {
+                $model->{$model->getKeyName()} = new Timeuuid(\time());
+            }
+
+            return true;
+        });
     }
 }

@@ -2,14 +2,15 @@
 
 namespace Cubettech\Lacassa\Query;
 
-use Illuminate\Database\Query\Grammars\Grammar as BaseGrammar;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Database\Query\Grammars\Grammar as BaseGrammar;
 
 class Grammar extends BaseGrammar
 {
-
     private const INSERT_ACTION = 'insert';
+
     private const UPDATE_ACTION = 'update';
+
     private const DELETE_ACTION = 'delete';
 
     /**
@@ -43,39 +44,6 @@ class Grammar extends BaseGrammar
     }
 
     /**
-     * Compile the components necessary for a select clause.
-     *
-     * @param  \Illuminate\Database\Query\Builder $query
-     * @return array
-     */
-    protected function compileComponents(BaseBuilder $query)
-    {
-        $sql = [];
-        foreach ($query->wheres as $key => $where) {
-            if ($where['type'] === 'Nested') {
-                $query->wheres = $where['query']->wheres;
-            }
-
-            // Cassandra doesnt support NOT
-            if ($where['type'] === 'NotNull') {
-                unset($query->wheres[$key]);
-            }
-        }
-        foreach ($this->selectComponents as $component) {
-            // To compile the query, we'll spin through each component of the query and
-            // see if that component exists. If it does we'll just call the compiler
-            // function for the component which is responsible for making the SQL.
-            if (null !== $query->$component) {
-                $method = 'compile' . ucfirst($component);
-
-                $sql[$component] = $this->$method($query, $query->$component);
-            }
-        }
-
-        return $sql;
-    }
-
-    /**
       * Compile an insert statement into CQL.
       *
       * @param  Cubettech\Lacassa\Query $query
@@ -88,6 +56,7 @@ class Grammar extends BaseGrammar
         // simply makes creating the CQL easier for us since we can utilize the same
         // basic routine regardless of an amount of records given to us to insert.
         $table = $this->wrapTable($query->from);
+
         if (!is_array(reset($values))) {
             $values = [$values];
         }
@@ -99,6 +68,7 @@ class Grammar extends BaseGrammar
 
         $columns = $this->columnize(array_keys(reset($values)));
         $collectionColumns = $this->columnize(array_keys($insertCollectionArray));
+
         if ($collectionColumns) {
             $columns = $columns ? $columns . ', ' . $collectionColumns : $collectionColumns;
         }
@@ -111,12 +81,12 @@ class Grammar extends BaseGrammar
                 return $this->parameterize($record);
             }
         )->implode(', ');
+
         if ($collectionParam) {
             $parameters = $parameters ? $parameters . ', ' . $collectionParam : $collectionParam;
         }
 
-
-        if($query->applyTimestamps()){
+        if ($query->applyTimestamps()) {
             $this->performTimestamps(self::INSERT_ACTION, $columns, $parameters);
         }
 
@@ -136,21 +106,6 @@ class Grammar extends BaseGrammar
     }
 
     /**
-     * Wrap a single string in keyword identifiers.
-     *
-     * @param  string $value
-     * @return string
-     */
-    protected function wrapValue($value)
-    {
-        if ($value !== '*') {
-            return str_replace('"', '""', $value);
-        }
-
-        return $value;
-    }
-
-    /**
      * Compile a delete statement into CQL.
      *
      * @param  Cubettech\Lacassa\Query $query
@@ -158,13 +113,15 @@ class Grammar extends BaseGrammar
      */
     public function compileDelete(BaseBuilder $query)
     {
-        $delColumns = "";
+        $delColumns = '';
+
         if (isset($query->delParams)) {
-            $delColumns = implode(", ", $query->delParams);
+            $delColumns = implode(', ', $query->delParams);
         }
 
         $wheres = is_array($query->wheres) ? $this->compileWheres($query) : '';
-        return trim("delete " . $delColumns . " from {$this->wrapTable($query->from)} $wheres");
+
+        return trim('delete ' . $delColumns . " from {$this->wrapTable($query->from)} $wheres");
     }
 
     /**
@@ -191,6 +148,7 @@ class Grammar extends BaseGrammar
         // intended records are updated by the SQL statements we generate to run.
         $wheres = $this->compileWheres($query);
         $upateCollections = $this->compileUpdateCollections($query);
+
         if ($upateCollections) {
             $upateCollections = $columns ? ', ' . $upateCollections : $upateCollections;
         }
@@ -228,8 +186,8 @@ class Grammar extends BaseGrammar
                 }
             }
         )->implode(', ');
-        return $updateCollectionCql;
 
+        return $updateCollectionCql;
     }
 
     /**
@@ -241,13 +199,12 @@ class Grammar extends BaseGrammar
     public function compileCollectionValues($type, $value)
     {
         if (is_array($value)) {
-
             if ('set' == $type) {
-                $collection = "{" . $this->buildCollectionString($type, $value) . "}";
+                $collection = '{' . $this->buildCollectionString($type, $value) . '}';
             } elseif ('list' == $type) {
-                $collection = "[" . $this->buildCollectionString($type, $value) . "]";
+                $collection = '[' . $this->buildCollectionString($type, $value) . ']';
             } elseif ('map' == $type) {
-                $collection = "{" . $this->buildCollectionString($type, $value) . "}";
+                $collection = '{' . $this->buildCollectionString($type, $value) . '}';
             }
 
             return $collection;
@@ -263,9 +220,11 @@ class Grammar extends BaseGrammar
     public function buildCollectionString($type, $value)
     {
         $isAssociative = false;
+
         if (count(array_filter(array_keys($value), 'is_string')) > 0) {
             $isAssociative = true;
         }
+
         if (is_array($value)) {
             if ('set' == $type || 'list' == $type) {
                 $collection = collect($value)->map(
@@ -279,6 +238,7 @@ class Grammar extends BaseGrammar
                         if ($isAssociative === true) {
                             $key = 'string' == strtolower(gettype($key)) ? "'" . $key . "'" : $key;
                             $item = 'string' == strtolower(gettype($item)) ? "'" . $item . "'" : $item;
+
                             return $key . ':' . $item;
                         } else {
                             return is_numeric($item) ? $item : "'" . $item . "'";
@@ -287,6 +247,7 @@ class Grammar extends BaseGrammar
                 )->implode(', ');
             }
         }
+
         return $collection;
     }
 
@@ -299,21 +260,70 @@ class Grammar extends BaseGrammar
     public function compileIndex($query, $columns)
     {
         $table = $this->wrapTable($query->from);
-        $value = implode(", ", $columns);
-        return "CREATE INDEX IF NOT EXISTS ON " . $table . "(" . $value . ")";
+        $value = implode(', ', $columns);
+
+        return 'CREATE INDEX IF NOT EXISTS ON ' . $table . '(' . $value . ')';
     }
 
-    private function performTimestamps($action, &$columns, &$parameters) {
+    /**
+     * Compile the components necessary for a select clause.
+     *
+     * @param  \Illuminate\Database\Query\Builder $query
+     * @return array
+     */
+    protected function compileComponents(BaseBuilder $query)
+    {
+        $sql = [];
+        foreach ($query->wheres as $key => $where) {
+            if ($where['type'] === 'Nested') {
+                $query->wheres = $where['query']->wheres;
+            }
+
+            // Cassandra doesnt support NOT
+            if ($where['type'] === 'NotNull') {
+                unset($query->wheres[$key]);
+            }
+        }
+        foreach ($this->selectComponents as $component) {
+            // To compile the query, we'll spin through each component of the query and
+            // see if that component exists. If it does we'll just call the compiler
+            // function for the component which is responsible for making the SQL.
+            if (null !== $query->$component) {
+                $method = 'compile' . ucfirst($component);
+
+                $sql[$component] = $this->$method($query, $query->$component);
+            }
+        }
+
+        return $sql;
+    }
+
+    /**
+     * Wrap a single string in keyword identifiers.
+     *
+     * @param  string $value
+     * @return string
+     */
+    protected function wrapValue($value)
+    {
+        if ($value !== '*') {
+            return str_replace('"', '""', $value);
+        }
+
+        return $value;
+    }
+
+    private function performTimestamps($action, &$columns, &$parameters)
+    {
         $createdAt = env('CASSANDRA_INSERT_TIMESTAMP_FIELD', 'created_at');
         $updatedAt = env('CASSANDRA_UPDATE_TIMESTAMP_FIELD', 'updated_at');
         $deletedAt = env('CASSANDRA_DELETE_TIMESTAMP_FIELD', 'deleted_at');
-
 
         switch ($action) {
             case self::INSERT_ACTION:
                 if (!empty($parameters)) {
                     $columns .= ", $createdAt, $updatedAt";
-                    $parameters .= ", toTimestamp(now()), toTimestamp(now())";
+                    $parameters .= ', toTimestamp(now()), toTimestamp(now())';
                 }
                 break;
 

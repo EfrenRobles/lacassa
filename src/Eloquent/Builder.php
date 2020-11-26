@@ -2,9 +2,9 @@
 
 namespace Cubettech\Lacassa\Eloquent;
 
+use Cassandra\Driver\Cursor;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Cassandra\Driver\Cursor;
 
 class Builder extends EloquentBuilder
 {
@@ -171,6 +171,31 @@ class Builder extends EloquentBuilder
     }
 
     /**
+     * Create a raw database expression.
+     *
+     * @param  closure  $expression
+     * @return mixed
+     */
+    public function raw($expression = null)
+    {
+        // Get raw results from the query builder.
+        $results = $this->query->raw($expression);
+
+        // Convert CassandraCursor results to a collection of models.
+        if ($results instanceof Cursor) {
+            $results = iterator_to_array($results, false);
+
+            return $this->model->hydrate($results);
+        } // The result is a single object.
+
+        elseif (is_array($results) and array_key_exists('_id', $results)) {
+            return $this->model->newFromBuilder((array) $results);
+        }
+
+        return $results;
+    }
+
+    /**
      * Add the "has" condition where clause to the query.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $hasQuery
@@ -220,29 +245,5 @@ class Builder extends EloquentBuilder
 
         // Add whereIn to the query.
         return $this->whereIn($this->model->getKeyName(), $relatedIds, $boolean, $not);
-    }
-
-    /**
-     * Create a raw database expression.
-     *
-     * @param  closure  $expression
-     * @return mixed
-     */
-    public function raw($expression = null)
-    {
-        // Get raw results from the query builder.
-        $results = $this->query->raw($expression);
-
-        // Convert CassandraCursor results to a collection of models.
-        if ($results instanceof Cursor) {
-            $results = iterator_to_array($results, false);
-            return $this->model->hydrate($results);
-        } // The result is a single object.
-
-        elseif (is_array($results) and array_key_exists('_id', $results)) {
-            return $this->model->newFromBuilder((array) $results);
-        }
-
-        return $results;
     }
 }

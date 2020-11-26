@@ -15,7 +15,7 @@ class PrepareSchema
      */
     public static function prepareSchema()
     {
-        self::newline("** Preparing Database Schema ** ");
+        self::newline('** Preparing Database Schema ** ');
 
         // (1) Table creation
 
@@ -24,7 +24,7 @@ class PrepareSchema
 //              restInfo varchar,
 //              webpage varchar,
 
-        $tableName = "campaigns";
+        $tableName = 'campaigns';
         $q_campaigns_schema = "
             CREATE TABLE IF NOT EXISTS {$tableName} (          
               id timeuuid primary key,
@@ -61,7 +61,6 @@ class PrepareSchema
             );
         ";
 
-
         $googleAdsGroups_tableName = 'googleadsgroups';
         $q_googleadsagroups_schema = "
             CREATE TABLE IF NOT EXISTS {$googleAdsGroups_tableName} (          
@@ -78,7 +77,6 @@ class PrepareSchema
             );
         ";
 
-
         // Checking if keyspace exists
         $keyspace = env('DB_KEYSPACE', 'mykeyspace');
         $result = self::execStatement(
@@ -89,22 +87,19 @@ class PrepareSchema
             throw new \Exception("The keyspace '{$keyspace}' does not exist");
         }
 
-        self::newline("The keyspace exists");
+        self::newline('The keyspace exists');
         try {
             $result = self::execStatement(
-                "CREATE TYPE IF NOT EXISTS location ( 
+                'CREATE TYPE IF NOT EXISTS location ( 
                             city varchar, 
                             region varchar,
                             country varchar,
                             rest varchar
-                          );"
+                          );'
             );
         } catch (\Exception $e) {
             return self::newline('[ERROR] Error in type creation');
         }
-
-
-
 
         // Checking if the table "campaigns" exists
         $result = self::execStatement(
@@ -116,23 +111,20 @@ class PrepareSchema
         if ($result->count() === 0) {
             echo "la tabla NO existía \n";
             $result = self::execStatement($q_campaigns_schema);
-            self::newline("The table did not exist");
+            self::newline('The table did not exist');
         } else {
-            self::newline("The table existed");
+            self::newline('The table existed');
         }
 
-
         $result = self::execStatement($q_googleadsads_schema);
-        self::newline("google ads ads table created");
-
+        self::newline('google ads ads table created');
 
         $result = self::execStatement($q_googleadsagroups_schema);
-        self::newline("google ads groups table created");
+        self::newline('google ads groups table created');
 
+        ////////////////////////////////////////
 
-////////////////////////////////////////
-
-        $tableName = "userlogins";
+        $tableName = 'userlogins';
         $q_userlogins_schema = "
             CREATE TABLE IF NOT EXISTS {$tableName} (          
               id timeuuid ,              
@@ -145,10 +137,9 @@ class PrepareSchema
         ";
 
         $result = self::execStatement($q_userlogins_schema);
-        self::newline("user logins table created");
+        self::newline('user logins table created');
 
-
-        $tableName = "users";
+        $tableName = 'users';
         $q_users_schema = "
             CREATE TABLE IF NOT EXISTS {$tableName} (          
               userid int primary key,              
@@ -162,10 +153,9 @@ class PrepareSchema
         ";
 
         $result = self::execStatement($q_users_schema);
-        self::newline("user table created");
+        self::newline('user table created');
 
-
-        $tableName = "companies";
+        $tableName = 'companies';
         $q_companies_schema = "
             CREATE TABLE IF NOT EXISTS {$tableName} (          
               companyid int primary key,              
@@ -180,10 +170,9 @@ class PrepareSchema
         ";
 
         $result = self::execStatement($q_companies_schema);
-        self::newline("companies table created");
+        self::newline('companies table created');
 
-
-        $tableName = "adgroupkeywords";
+        $tableName = 'adgroupkeywords';
         $q_companies_schema = "
             CREATE TABLE IF NOT EXISTS {$tableName} (          
               id timeuuid primary key,   
@@ -197,13 +186,12 @@ class PrepareSchema
         ";
 
         $result = self::execStatement($q_companies_schema);
-        self::newline("adgroupkeywordstable created");
-
+        self::newline('adgroupkeywordstable created');
 
         $tableSchemas = [
             [
-                'name' => "campaigncriterions",
-                'schema' => "
+                'name' => 'campaigncriterions',
+                'schema' => '
                         CREATE TABLE IF NOT EXISTS campaigncriterions (          
                           id timeuuid primary key,              
                           googleentityid bigint,
@@ -218,11 +206,11 @@ class PrepareSchema
                           microlongitude varchar,               
                           createddate timestamp
                         );
-                    "
+                    '
             ],
             [
-                'name' => "customerclients",
-                'schema' => "
+                'name' => 'customerclients',
+                'schema' => '
                         CREATE TABLE IF NOT EXISTS customerclients (          
                           googleentityid bigint primary key, 
                           userid timeuuid,                                          
@@ -233,12 +221,12 @@ class PrepareSchema
                           parentgoogleentityname varchar,                            
                           createddate timestamp
                         );
-                    "
+                    '
             ],
             [
                 // id timeuuid primary key,
-                'name' => "metrics",
-                'schema' => "
+                'name' => 'metrics',
+                'schema' => '
                         CREATE TABLE IF NOT EXISTS metrics (                              
                           metricid varchar primary key, 
                           googleentityid bigint,                                                                   
@@ -250,34 +238,29 @@ class PrepareSchema
                           campaignid varchar,                                                    
                           createddate timestamp
                         );
-                    "
+                    '
             ]
         ];
 
-
-        foreach ($tableSchemas as $tableSchema){
+        foreach ($tableSchemas as $tableSchema) {
             $result = self::execStatement($tableSchema['schema']);
             self::newline("{$tableSchema['schema']} created");
         }
-
     }
 
-
     // PRIVATE METHODS
-
 
     private static function execStatement($query)
     {
         $statement = new \Cassandra\SimpleStatement($query);
         $session = app('db');
         $result = $session->execute($statement);
+
         return $result;
     }
-
 
     private static function newline($line)
     {
         print("\n[*] {$line}\n");
     }
-
 }

@@ -2,8 +2,8 @@
 
 namespace Cubettech\Lacassa\Schema;
 
-use Illuminate\Database\Connection;
 use \Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;
+use Illuminate\Database\Connection;
 
 class Blueprint extends \Illuminate\Database\Schema\Blueprint
 {
@@ -61,10 +61,11 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
 
             if (method_exists($grammar, $method)) {
                 if (!is_null($sql = $grammar->$method($this, $command, $connection))) {
-                    $statements = array_merge($statements, (array)$sql);
+                    $statements = array_merge($statements, (array) $sql);
                 }
             }
         }
+
         return $statements;
     }
 
@@ -78,20 +79,23 @@ class Blueprint extends \Illuminate\Database\Schema\Blueprint
      */
     public function primary($columns, $name = null, $algorithm = null)
     {
-        $columns = (array)$columns;
+        $columns = (array) $columns;
         //$index = $index ?: $this->createIndexName($type, $columns);
         $this->primary = $command = $this->createCommand('primary', compact('columns', 'algorithm'));
+
         return $command;
     }
 
     public function compilePrimary()
     {
         $primaryKey = $this->primary;
+
         if ($primaryKey) {
             if ('primary' == $primaryKey->name) {
                 return sprintf('primary key (%s) ', implode(', ', $primaryKey->columns));
             }
         }
+
         return;
     }
 

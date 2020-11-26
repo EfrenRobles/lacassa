@@ -3,13 +3,13 @@
 namespace Cubettech\Lacassa;
 
 use Cassandra\DefaultSession;
-use Exception;
-use Laravel\Lumen\Application;
 use Cubettech\Lacassa\Helper\Helper;
 use Cubettech\Lacassa\Query\Builder;
+use Exception;
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Database\ConnectionResolverInterface as ConnectionResolverInterface;
 use Illuminate\Support\Collection;
+use Laravel\Lumen\Application;
 
 class Connection extends BaseConnection implements ConnectionResolverInterface
 {
@@ -23,7 +23,6 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     /** Create a new database connection instance. */
     public function __construct(Application $app)
     {
-
         $config = $this->validateConfig($app);
 
         // Create the connection
@@ -32,10 +31,23 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         $this->useDefaultPostProcessor();
     }
 
+    /**
+     * Dynamically pass methods to the connection.
+     *
+     * @param string $method
+     * @param array $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters)
+    {
+        return call_user_func_array([$this->connection, $method], $parameters);
+    }
+
     /** Begin a fluent query against a database collection. */
     public function collection(string $collection) : Builder
     {
         $query = new Query\Builder($this);
+
         return $query->from($collection);
     }
 
@@ -68,28 +80,6 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         return $this->connection;
     }
 
-    /** Create a new Cassandra connection. */
-    protected function createConnection(array $config) : DefaultSession
-    {
-        $cluster = \Cassandra::cluster()
-            ->withContactPoints($config['host'])
-            ->withPort((int)$config['port']);
-
-        if (!empty($config['authType']) && $config['authType'] == 'userCredentials') {
-            if (empty($config['username']) || empty($config['password'])) {
-                throw new Exception(
-                    "You have selected userCredentials auth type but you have not \n" .
-                    "provided username and password, please check your config params"
-                );
-            }
-
-            $cluster = $cluster->withCredentials($config['username'], $config['password']);
-        }
-
-        return $cluster->build()
-            ->connect($config['keyspace']);
-    }
-
     /**
      * @inheritdoc
      */
@@ -115,31 +105,6 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     }
 
     /**
-     * @inheritdoc
-     */
-    protected function getDefaultPostProcessor() : Query\Processor
-    {
-        return new Query\Processor();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function getDefaultQueryGrammar()
-    {
-        return new Query\Grammar();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function getDefaultSchemaGrammar()
-    {
-        return new Schema\Grammar();
-    }
-
-
-    /**
      * Execute an CQL statement and return the boolean result.
      *
      * @param string $query
@@ -148,11 +113,9 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
      */
     public function statement($query, $bindings = [])
     {
-
-
         foreach ($bindings as $binding) {
             if (is_bool($binding)) {
-                $value = $binding ? "true" : "false";
+                $value = $binding ? 'true' : 'false';
             } elseif (is_array($binding)) {
                 $value = $this->elem2UDT($binding);
             } else {
@@ -189,26 +152,14 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
         return $builder->executeCql($query);
     }
 
-
     /** Execute an CQL statement and return the boolean result.
      * @param string $query
      */
     public function raw($query): Collection
     {
         $builder = new Query\Builder($this, $this->getPostProcessor());
-        return $builder->executeCql($query);
-    }
 
-    /**
-     * Dynamically pass methods to the connection.
-     *
-     * @param string $method
-     * @param array $parameters
-     * @return mixed
-     */
-    public function __call($method, $parameters)
-    {
-        return call_user_func_array([$this->connection, $method], $parameters);
+        return $builder->executeCql($query);
     }
 
     // Interface methods implementation (for Lumen 5.7.* compatibility)
@@ -244,6 +195,52 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
     {
     }
 
+    /** Create a new Cassandra connection. */
+    protected function createConnection(array $config) : DefaultSession
+    {
+        $cluster = \Cassandra::cluster()
+            ->withContactPoints($config['host'])
+            ->withPort((int) $config['port']);
+
+        if (!empty($config['authType']) && $config['authType'] == 'userCredentials') {
+            if (empty($config['username']) || empty($config['password'])) {
+                throw new Exception(
+                    "You have selected userCredentials auth type but you have not \n" .
+                    'provided username and password, please check your config params'
+                );
+            }
+
+            $cluster = $cluster->withCredentials($config['username'], $config['password']);
+        }
+
+        return $cluster->build()
+            ->connect($config['keyspace']);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getDefaultPostProcessor() : Query\Processor
+    {
+        return new Query\Processor();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getDefaultQueryGrammar()
+    {
+        return new Query\Grammar();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getDefaultSchemaGrammar()
+    {
+        return new Schema\Grammar();
+    }
+
     // PRIVATE METHODS
 
     /**
@@ -254,31 +251,34 @@ class Connection extends BaseConnection implements ConnectionResolverInterface
      */
     private function elem2UDT($elem)
     {
-        $result = "";
+        $result = '';
+
         if (is_array($elem)) {
             $result .= '{';
-            $each_result = "";
+            $each_result = '';
             foreach ($elem as $key => $value) {
                 if (!is_array($value)) {
                     $each_result .= "{$key}: '$value',";
                 } else {
-                    $each_result .= $this->elem2UDT($value) . ",";
+                    $each_result .= $this->elem2UDT($value) . ',';
                 }
             }
+
             if (substr($each_result, strlen($each_result) - 1) == ',') {
                 $each_result = substr($each_result, 0, strlen($each_result) - 1);
             }
             $result .= $each_result;
             $result .= '}';
         }
+
         return $result;
     }
 
     /** Check if the configuration cassandra is set in the database.php file */
     private function validateConfig(Application $app) : array
     {
-        if (isset($app->make('config')["database.connections.cassandra"])) {
-            return $app->make('config')["database.connections.cassandra"];
+        if (isset($app->make('config')['database.connections.cassandra'])) {
+            return $app->make('config')['database.connections.cassandra'];
         }
 
         throw new Exception(

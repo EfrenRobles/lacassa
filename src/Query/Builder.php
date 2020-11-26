@@ -2,19 +2,16 @@
 
 namespace Cubettech\Lacassa\Query;
 
-use InvalidArgumentException;
+use Cassandra;
+use Cubettech\Lacassa\Connection;
+use Cubettech\Lacassa\Helper\Helper;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Cubettech\Lacassa\Connection;
-use Cassandra;
-use Cubettech\Lacassa\Helper\Helper;
+use InvalidArgumentException;
 
 class Builder extends BaseBuilder
 {
-
-    private $allowFilters = false;
-    private $applyTimestamps = true;
     /**
      * The current query value bindings.
      *
@@ -30,6 +27,7 @@ class Builder extends BaseBuilder
         'updateCollection' => [],
         'insertCollection' => [],
     ];
+
     /**
      * The where constraints for the query.
      *
@@ -38,13 +36,6 @@ class Builder extends BaseBuilder
     public $updateCollections;
 
     public $insertCollections;
-
-    /**
-     * The database collection.
-     *
-     * @var CassandraCollection
-     */
-    protected $collection;
 
     /**
      * The column projections.
@@ -132,6 +123,19 @@ class Builder extends BaseBuilder
     ];
 
     /**
+     * [$collectionTypes description]
+     * @var [array]
+     */
+    public $collectionTypes = ['set', 'list', 'map'];
+
+    /**
+     * The database collection.
+     *
+     * @var CassandraCollection
+     */
+    protected $collection;
+
+    /**
      * Operator conversion.
      *
      * @var array
@@ -153,11 +157,9 @@ class Builder extends BaseBuilder
      */
     protected $useCollections;
 
-    /**
-     * [$collectionTypes description]
-     * @var [array]
-     */
-    public $collectionTypes = ['set', 'list', 'map'];
+    private $allowFilters = false;
+
+    private $applyTimestamps = true;
 
     /**
      * @inheritdoc
@@ -174,6 +176,8 @@ class Builder extends BaseBuilder
      * Set the table which the query is targeting.
      *
      * @param  string $table
+     * @param mixed $collection
+     * @param null|mixed $as
      *
      * @return $this
      */
@@ -238,7 +242,7 @@ class Builder extends BaseBuilder
      */
     public function executeCql($cql) : Collection
     {
-        dd($cql);
+        // dump($cql);
         $statement = new Cassandra\SimpleStatement($cql);
         $future = $this->connection->getCassandraConnection()->executeAsync($statement);
         $result = $future->get();
@@ -299,7 +303,8 @@ class Builder extends BaseBuilder
     public function count($columns = '*')
     {
         $result = $this->get();
-        return (int)$result->count();
+
+        return (int) $result->count();
     }
 
     /**
@@ -350,6 +355,7 @@ class Builder extends BaseBuilder
             throw new InvalidArgumentException("Invalid binding type: {$type}.");
         }
         $this->bindings[$type][] = $value;
+
         return $this;
     }
 
@@ -363,6 +369,7 @@ class Builder extends BaseBuilder
     public function update(array $values = [])
     {
         $cql = $this->grammar->compileUpdate($this, $values);
+
         return $this->connection->update(
             $cql,
             $this->cleanBindings(
@@ -393,7 +400,6 @@ class Builder extends BaseBuilder
         if (! is_array(reset($values))) {
             $values = [$values];
         }
-
 
         // Here, we will sort the insert keys for every record so that each insert is
         // in the same order for the record. We need to make sure this is the case
@@ -449,12 +455,14 @@ class Builder extends BaseBuilder
     public function allowFiltering($value = true)
     {
         $this->allowFilters = $value;
+
         return $this;
     }
 
     public function withoutTimestamps($value = true)
     {
         $this->applyTimestamps = !$value;
+
         return $this;
     }
 

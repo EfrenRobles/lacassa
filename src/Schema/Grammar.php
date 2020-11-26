@@ -2,11 +2,11 @@
 
 namespace Cubettech\Lacassa\Schema;
 
-use Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;
-use Cubettech\Lacassa\Schema\Blueprint as Blueprint;
+use \Illuminate\Database\Schema\Blueprint as BaseBlueprint;
 use \Illuminate\Support\Fluent;
 use Cubettech\Lacassa\Connection;
-use \Illuminate\Database\Schema\Blueprint as BaseBlueprint;
+use Cubettech\Lacassa\Schema\Blueprint as Blueprint;
+use Illuminate\Database\Schema\Grammars\Grammar as BaseGrammar;
 
 class Grammar extends BaseGrammar
 {
@@ -93,75 +93,6 @@ class Grammar extends BaseGrammar
     }
 
     /**
-     * Create the main create table clause.
-     *
-     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
-     * @param  \Illuminate\Support\Fluent  $command
-     * @param  \Illuminate\Database\Connection  $connection
-     * @return string
-     */
-    protected function compileCreateTable($blueprint, $command, $connection)
-    {
-        return sprintf(
-           '%s table %s (%s, %s)',
-           'create',
-           $this->wrapTable($blueprint),
-           implode(', ', $this->getColumns($blueprint)),
-           $this->compilePrimary($blueprint, $command)
-       );
-    }
-
-    /**
-     * Append the character set specifications to a command.
-     *
-     * @param  string  $sql
-     * @param  \Illuminate\Database\Connection  $connection
-     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
-     * @return string
-     */
-    protected function compileCreateEncoding($sql, Connection $connection, Blueprint $blueprint)
-    {
-        // First we will set the character set if one has been set on either the create
-        // blueprint itself or on the root configuration for the connection that the
-        // table is being created on. We will add these to the create table query.
-        if (isset($blueprint->charset)) {
-            $sql .= ' default character set '.$blueprint->charset;
-        } elseif (! is_null($charset = $connection->getConfig('charset'))) {
-            $sql .= ' default character set '.$charset;
-        }
-
-        // Next we will add the collation to the create table statement if one has been
-        // added to either this create table blueprint or the configuration for this
-        // connection that the query is targeting. We'll add it to this SQL query.
-        if (isset($blueprint->collation)) {
-            $sql .= ' collate '.$blueprint->collation;
-        } elseif (! is_null($collation = $connection->getConfig('collation'))) {
-            $sql .= ' collate '.$collation;
-        }
-
-        return $sql;
-    }
-
-    /**
-     * Append the engine specifications to a command.
-     *
-     * @param  string  $sql
-     * @param  \Illuminate\Database\Connection  $connection
-     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
-     * @return string
-     */
-    protected function compileCreateEngine($sql, Connection $connection, Blueprint $blueprint)
-    {
-        if (isset($blueprint->engine)) {
-            return $sql.' engine = '.$blueprint->engine;
-        } elseif (! is_null($engine = $connection->getConfig('engine'))) {
-            return $sql.' engine = '.$engine;
-        }
-
-        return $sql;
-    }
-
-    /**
      * Compile an add column command.
      *
      * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
@@ -172,7 +103,7 @@ class Grammar extends BaseGrammar
     {
         $columns = $this->prefixArray('add', $this->getColumns($blueprint));
 
-        return 'alter table '.$this->wrapTable($blueprint).' '.implode(', ', $columns);
+        return 'alter table ' . $this->wrapTable($blueprint) . ' ' . implode(', ', $columns);
     }
 
     /**
@@ -185,6 +116,7 @@ class Grammar extends BaseGrammar
     public function compilePrimary(Blueprint $blueprint, Fluent $command)
     {
         return $blueprint->compilePrimary();
+
         return $this->compileKey($blueprint, $command, 'primary key');
     }
 
@@ -213,26 +145,6 @@ class Grammar extends BaseGrammar
     }
 
     /**
-     * Compile an index creation command.
-     *
-     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
-     * @param  \Illuminate\Support\Fluent  $command
-     * @param  string  $type
-     * @return string
-     */
-    protected function compileKey(Blueprint $blueprint, Fluent $command, $type)
-    {
-        return sprintf(
-           'alter table %s add %s %s%s(%s)',
-           $this->wrapTable($blueprint),
-           $type,
-           $this->wrap($command->index),
-           $command->algorithm ? ' using '.$command->algorithm : '',
-           $this->columnize($command->columns)
-       );
-    }
-
-    /**
      * Compile a drop table command.
      *
      * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
@@ -241,7 +153,7 @@ class Grammar extends BaseGrammar
      */
     public function compileDrop(Blueprint $blueprint, Fluent $command)
     {
-        return 'drop table '.$this->wrapTable($blueprint);
+        return 'drop table ' . $this->wrapTable($blueprint);
     }
 
     /**
@@ -253,7 +165,7 @@ class Grammar extends BaseGrammar
      */
     public function compileDropIfExists(Blueprint $blueprint, Fluent $command)
     {
-        return 'drop table if exists '.$this->wrapTable($blueprint);
+        return 'drop table if exists ' . $this->wrapTable($blueprint);
     }
 
     /**
@@ -267,7 +179,7 @@ class Grammar extends BaseGrammar
     {
         $columns = $this->prefixArray('drop', $this->wrapArray($command->columns));
 
-        return 'alter table '.$this->wrapTable($blueprint).' '.implode(', ', $columns);
+        return 'alter table ' . $this->wrapTable($blueprint) . ' ' . implode(', ', $columns);
     }
 
     /**
@@ -279,7 +191,7 @@ class Grammar extends BaseGrammar
      */
     public function compileDropPrimary(Blueprint $blueprint, Fluent $command)
     {
-        return 'alter table '.$this->wrapTable($blueprint).' drop primary key';
+        return 'alter table ' . $this->wrapTable($blueprint) . ' drop primary key';
     }
 
     /**
@@ -335,7 +247,7 @@ class Grammar extends BaseGrammar
     {
         $from = $this->wrapTable($blueprint);
 
-        return "rename table {$from} to ".$this->wrapTable($command->to);
+        return "rename table {$from} to " . $this->wrapTable($command->to);
     }
 
     /**
@@ -356,6 +268,95 @@ class Grammar extends BaseGrammar
     public function compileDisableForeignKeyConstraints()
     {
         return 'SET FOREIGN_KEY_CHECKS=0;';
+    }
+
+    /**
+     * Create the main create table clause.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @param  \Illuminate\Support\Fluent  $command
+     * @param  \Illuminate\Database\Connection  $connection
+     * @return string
+     */
+    protected function compileCreateTable($blueprint, $command, $connection)
+    {
+        return sprintf(
+           '%s table %s (%s, %s)',
+           'create',
+           $this->wrapTable($blueprint),
+           implode(', ', $this->getColumns($blueprint)),
+           $this->compilePrimary($blueprint, $command)
+       );
+    }
+
+    /**
+     * Append the character set specifications to a command.
+     *
+     * @param  string  $sql
+     * @param  \Illuminate\Database\Connection  $connection
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return string
+     */
+    protected function compileCreateEncoding($sql, Connection $connection, Blueprint $blueprint)
+    {
+        // First we will set the character set if one has been set on either the create
+        // blueprint itself or on the root configuration for the connection that the
+        // table is being created on. We will add these to the create table query.
+        if (isset($blueprint->charset)) {
+            $sql .= ' default character set ' . $blueprint->charset;
+        } elseif (! is_null($charset = $connection->getConfig('charset'))) {
+            $sql .= ' default character set ' . $charset;
+        }
+
+        // Next we will add the collation to the create table statement if one has been
+        // added to either this create table blueprint or the configuration for this
+        // connection that the query is targeting. We'll add it to this SQL query.
+        if (isset($blueprint->collation)) {
+            $sql .= ' collate ' . $blueprint->collation;
+        } elseif (! is_null($collation = $connection->getConfig('collation'))) {
+            $sql .= ' collate ' . $collation;
+        }
+
+        return $sql;
+    }
+
+    /**
+     * Append the engine specifications to a command.
+     *
+     * @param  string  $sql
+     * @param  \Illuminate\Database\Connection  $connection
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return string
+     */
+    protected function compileCreateEngine($sql, Connection $connection, Blueprint $blueprint)
+    {
+        if (isset($blueprint->engine)) {
+            return $sql . ' engine = ' . $blueprint->engine;
+        } elseif (! is_null($engine = $connection->getConfig('engine'))) {
+            return $sql . ' engine = ' . $engine;
+        }
+
+        return $sql;
+    }
+
+    /**
+     * Compile an index creation command.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @param  \Illuminate\Support\Fluent  $command
+     * @param  string  $type
+     * @return string
+     */
+    protected function compileKey(Blueprint $blueprint, Fluent $command, $type)
+    {
+        return sprintf(
+           'alter table %s add %s %s%s(%s)',
+           $this->wrapTable($blueprint),
+           $type,
+           $this->wrap($command->index),
+           $command->algorithm ? ' using ' . $command->algorithm : '',
+           $this->columnize($command->columns)
+       );
     }
 
     /**
@@ -465,7 +466,7 @@ class Grammar extends BaseGrammar
      */
     protected function typeList(Fluent $column)
     {
-        return 'list<'.$column->collectionType.'>';
+        return 'list<' . $column->collectionType . '>';
     }
 
     /**
@@ -476,7 +477,7 @@ class Grammar extends BaseGrammar
      */
     protected function typeMap(Fluent $column)
     {
-        return 'map<'.$column->collectionType1.', '.$column->collectionType2.'>';
+        return 'map<' . $column->collectionType1 . ', ' . $column->collectionType2 . '>';
     }
 
     /**
@@ -487,7 +488,7 @@ class Grammar extends BaseGrammar
       */
     protected function typeSet(Fluent $column)
     {
-        return 'set<'.$column->collectionType.'>';
+        return 'set<' . $column->collectionType . '>';
     }
 
     /**
@@ -509,7 +510,7 @@ class Grammar extends BaseGrammar
      */
     protected function typeTuple(Fluent $column)
     {
-        return 'tuple<'.$column->tuple1type.', '.$column->tuple2type.', '.$column->tuple3type.'>';
+        return 'tuple<' . $column->tuple1type . ', ' . $column->tuple2type . ', ' . $column->tuple3type . '>';
     }
 
     /**
@@ -641,7 +642,7 @@ class Grammar extends BaseGrammar
      */
     protected function typeDecimal(Fluent $column)
     {
-        return "decimal";
+        return 'decimal';
     }
 
     /**
@@ -665,6 +666,7 @@ class Grammar extends BaseGrammar
     {
         return 'ascii';
     }
+
     /**
      * Create the column definition for an enum type.
      *
@@ -673,7 +675,7 @@ class Grammar extends BaseGrammar
      */
     protected function typeEnum(Fluent $column)
     {
-        return "enum('".implode("', '", $column->allowed)."')";
+        return "enum('" . implode("', '", $column->allowed) . "')";
     }
 
     /**
@@ -879,7 +881,7 @@ class Grammar extends BaseGrammar
     protected function modifyCharset(Blueprint $blueprint, Fluent $column)
     {
         if (! is_null($column->charset)) {
-            return ' character set '.$column->charset;
+            return ' character set ' . $column->charset;
         }
     }
 
@@ -893,7 +895,7 @@ class Grammar extends BaseGrammar
     protected function modifyCollate(Blueprint $blueprint, Fluent $column)
     {
         if (! is_null($column->collation)) {
-            return ' collate '.$column->collation;
+            return ' collate ' . $column->collation;
         }
     }
 
@@ -921,7 +923,7 @@ class Grammar extends BaseGrammar
     protected function modifyDefault(Blueprint $blueprint, Fluent $column)
     {
         if (! is_null($column->default)) {
-            return ' default '.$this->getDefaultValue($column->default);
+            return ' default ' . $this->getDefaultValue($column->default);
         }
     }
 
@@ -963,7 +965,7 @@ class Grammar extends BaseGrammar
     protected function modifyAfter(Blueprint $blueprint, Fluent $column)
     {
         if (! is_null($column->after)) {
-            return ' after '.$this->wrap($column->after);
+            return ' after ' . $this->wrap($column->after);
         }
     }
 
@@ -977,7 +979,7 @@ class Grammar extends BaseGrammar
     protected function modifyComment(Blueprint $blueprint, Fluent $column)
     {
         if (! is_null($column->comment)) {
-            return " comment '".$column->comment."'";
+            return " comment '" . $column->comment . "'";
         }
     }
 
@@ -1010,7 +1012,7 @@ class Grammar extends BaseGrammar
             // Each of the column types have their own compiler functions which are tasked
             // with turning the column definition into its SQL format for this platform
             // used by the connection. The column's modifiers are compiled and added.
-            $sql = $this->wrap($column).' '.$this->getType($column);
+            $sql = $this->wrap($column) . ' ' . $this->getType($column);
 
             $columns[] = $sql;
         }
