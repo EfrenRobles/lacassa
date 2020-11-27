@@ -1,4 +1,4 @@
-## **Eloquent and query builder for Cassandra on Lumen 7.2** (BETA)
+## **Eloquent and query builder for Cassandra on Lumen 8.0 with support for PHP 7.4.12 ** (BETA)
 
 A Query builder with support for Cassandra, using the original Laravel API. This library extends the original Laravel classes, so it uses exactly the same methods.
 
@@ -6,10 +6,11 @@ A Query builder with support for Cassandra, using the original Laravel API. This
 
     * Installation
     * Configuration
-    * Query Builder
     * Migration (pending)
+    * Eloquent (beta)
     * Models (beta)
     * Seeders (beta)
+    * Query Builder
     * Examples
 
 ## **Installation**
@@ -20,7 +21,7 @@ A Query builder with support for Cassandra, using the original Laravel API. This
     or 
     https://github.com/datastax/php-driver/blob/master/ext/README.md
 
-    *datastax php-driver requires php version 5.6+ but it is possible to install it on php 7.3 using repository PHP-232*
+    *datastax php-driver requires php version 5.6+ but it is possible to install it on php 7.4 using repository PHP-232*
 
     Installation using composer:
 
@@ -70,8 +71,7 @@ A Query builder with support for Cassandra, using the original Laravel API. This
             'table' => 'users',
         ],
             ],
-
-** Migrations ** (Pending)
+### **Migrations** (Pending)
 
     We can not use migration yet due ( Lost connection and no reconnector available. )
 
@@ -124,24 +124,19 @@ A Query builder with support for Cassandra, using the original Laravel API. This
     primary('a')
     primary(['a', 'b'])
 
+**Eloquent** (Beta)
 
-**Query Builder** (ok)
-
-    The database driver plugs right into the original query builder. When using cassandra connections, you will be able to build fluent queries to perform database operations.
-
-        $emp = DB::table('emp')->get();
-
-        $emp = DB::table('emp')->where('emp_name', 'Christy')->first();
-
-    If you did not change your default database connection, you will need to specify it when querying.
-
-        $emp = DB::connection('cassandra')->table('emp')->get();
-
-** Models ** (beta)
-    To use models on casandra is mandatory enable Facades and Eloquent first in the bootstrap/app.php
+    To use Eloquent on casandra is mandatory enable Facades and Eloquent first in the bootstrap/app.php
+    Facades are optional if you can avoid this, your app will be better
     
-    $app->withFacades();
+    // $app->withFacades();
     $app->withEloquent();
+
+    $query = (new User)->where('email', '=', 'email@example.com')->get();
+
+    $query = (new User)->first();
+
+**Models** (beta)
     
     In a new file that will be your model you need to use
         use Cubettech\Lacassa\Eloquent\Model;
@@ -152,7 +147,7 @@ A Query builder with support for Cassandra, using the original Laravel API. This
     in the beta stage, you need to set timestamp = false due this issue ( The column names contains duplicates ), but timestamp like created_at and updated_at will be needed on table.
         public $timestamps = false;
 
-** Seeders ** (beta)
+**Seeders** (beta)
 
     Seedes in cassandra does not have changes.
     
@@ -180,7 +175,19 @@ A Query builder with support for Cassandra, using the original Laravel API. This
                     ->create();
             }
         }    
-    
+
+**Query Builder** (beta)
+
+    The database driver plugs right into the original query builder. When using cassandra connections, you will be able to build fluent queries to perform database operations.
+
+        $emp = DB::table('emp')->get();
+
+        $emp = DB::table('emp')->where('emp_name', 'Christy')->first();
+
+    If you did not change your default database connection, you will need to specify it when querying.
+
+        $emp = DB::connection('cassandra')->table('emp')->get();
+
 **Examples**
 
     ### **Basic Usage**
