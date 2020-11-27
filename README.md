@@ -126,7 +126,7 @@ A Query builder with support for Cassandra, using the original Laravel API. This
 
 **Eloquent** (Beta)
 
-    To use Eloquent on casandra is mandatory enable Facades and Eloquent first in the bootstrap/app.php
+    To use Eloquent on casandra is mandatory enable Eloquent first in the bootstrap/app.php
     Facades are optional if you can avoid this, your app will be better
     
     // $app->withFacades();
@@ -153,12 +153,13 @@ A Query builder with support for Cassandra, using the original Laravel API. This
     
     Model Factories work normal, no changes here, just point to the model that you need.
     
-        $factory->define(User::class, function (Faker $faker) {
+        public function definition()
+        {
             return [
-                'name' => $faker->name,
-                'email' => $faker->email,
+                'name' => $this->faker->name,
+                'email' => $this->faker->unique()->safeEmail,
             ];
-        });
+        }
         
     Seeder file work normal, no changes needed here.
     
